@@ -1,0 +1,1661 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>永續飲料店數學小店員</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#5b3a1e;--amber:#f59e0b;}
+  html,body{height:100%;margin:0;overflow:hidden;background:#bfe9ff;color:var(--ink);
+    font-family:'Huninn','Noto Sans TC',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;}
+  #scene{position:fixed;inset:0;width:100%;height:100%;display:block;}
+  ruby{ruby-position:over;ruby-align:center;}
+  rt{font-size:.42em;color:#a0522d;font-family:'Noto Sans TC',sans-serif;font-weight:500;letter-spacing:0;line-height:1;}
+  body.no-zy rt{display:none;}
+  button{font-family:inherit;}
+
+  .pill{background:rgba(255,255,255,.92);border:3px solid #fcd34d;border-radius:999px;padding:.3rem .9rem;font-weight:900;font-size:1.1rem;
+    box-shadow:0 4px 0 #f59e0b55;white-space:nowrap;}
+  button.pill:active{transform:translateY(2px);}
+
+  .btn-go{background:#22c55e;color:#fff;font-weight:900;font-size:1.5rem;padding:.55rem 1.8rem;border-radius:999px;box-shadow:0 6px 0 #15803d;transition:transform .1s;}
+  .btn-go:active{transform:translateY(4px);box-shadow:0 2px 0 #15803d;}
+  .btn-go:disabled{background:#a3a3a3;box-shadow:0 6px 0 #737373;}
+  .btn-alt{background:#38bdf8;color:#fff;font-weight:900;font-size:1.35rem;padding:.5rem 1.4rem;border-radius:999px;box-shadow:0 6px 0 #0369a1;}
+  .btn-alt:active{transform:translateY(4px);box-shadow:0 2px 0 #0369a1;}
+  .btn-alt:disabled{background:#a3a3a3;box-shadow:0 6px 0 #737373;}
+  .btn-ch{width:4.8rem;height:4.8rem;font-size:2.6rem;font-weight:900;border-radius:1.2rem;background:#e0f2fe;border:4px solid #7dd3fc;box-shadow:0 6px 0 #38bdf8;}
+  .btn-ch:active{transform:translateY(4px);box-shadow:0 2px 0 #38bdf8;}
+  .btn-card{border-radius:1.3rem;background:#fff;border:4px solid #fcd34d;box-shadow:0 6px 0 #f59e0b;padding:.7rem 1.2rem;font-size:1.35rem;font-weight:900;}
+  .btn-card:active{transform:translateY(4px);box-shadow:0 2px 0 #f59e0b;}
+  .cslot{display:inline-flex;align-items:center;justify-content:center;width:4rem;height:4rem;border:4px dashed #f59e0b;border-radius:999px;color:#f59e0b;font-weight:900;font-size:2.4rem;}
+
+  /* 面板 */
+  #panel{scrollbar-width:thin;}
+  .bubble{position:relative;background:#fff8ec;border:4px solid #fcd34d;border-radius:1.4rem;padding:.6rem 1.1rem;font-size:1.45rem;line-height:2.3rem;font-weight:700;flex:1;}
+  .bubble::before{content:"";position:absolute;left:-16px;top:20px;border:12px solid transparent;border-right-color:#fcd34d;}
+  .tag{background:#fde68a;border-radius:999px;padding:.2rem 1rem;font-weight:900;font-size:1.15rem;}
+  .q{font-size:1.4rem;font-weight:800;line-height:2.3rem;}
+  .tip{background:#f0f9ff;border:4px solid #7dd3fc;border-radius:1.2rem;padding:.7rem 1rem;font-size:1.35rem;font-weight:800;line-height:2.3rem;min-height:3.6rem;}
+  .eq{font-size:2.3rem;font-weight:900;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;justify-content:center;}
+  .eqline{font-size:1.9rem;font-weight:900;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin:.4rem 0;}
+  .note{font-size:1.1rem;background:#fee2e2;color:#dc2626;border-radius:999px;padding:.1rem .7rem;}
+
+  /* 答案格 + 鍵盤 */
+  .sl{display:inline-flex;align-items:center;justify-content:center;min-width:3.2rem;height:3.7rem;padding:0 .3rem;border:4px dashed var(--amber);
+    border-radius:.9rem;background:#fffbeb;font-size:2.4rem;font-weight:900;color:#1d4ed8;cursor:pointer;vertical-align:middle;transition:.15s;}
+  .sl-sm{min-width:2.3rem;height:2.4rem;font-size:1.5rem;border-width:3px;border-radius:.6rem;}
+  .sl-w{min-width:4.8rem;}
+  .sl:empty::before{content:attr(data-ph);color:#d4b483;}
+  .sl[data-lock]{opacity:.4;border-color:#d1d5db;cursor:default;}
+  .sl.act{border-style:solid;border-color:#f97316;background:#fff;box-shadow:0 0 0 5px #fed7aa;opacity:1;animation:glow 1.2s infinite;}
+  .sl.done{opacity:1;border-style:solid;border-color:#22c55e;background:#f0fdf4;color:#15803d;animation:none;}
+  @keyframes glow{50%{box-shadow:0 0 0 9px #fed7aa88;}}
+  .kp{background:#fef3c7;border:4px solid #fcd34d;border-radius:1.4rem;padding:.7rem;}
+  .kp-t{text-align:center;font-weight:900;margin-bottom:.4rem;}
+  .kp .grid{grid-template-columns:repeat(3,4rem)!important;}
+  .kb{width:4rem;height:3.5rem;font-size:1.9rem;font-weight:900;border-radius:1rem;background:#fff;border:3px solid #fcd34d;box-shadow:0 4px 0 #f59e0b;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;padding:0;overflow:hidden;white-space:nowrap;box-sizing:border-box;}
+  .kb:active{transform:translateY(3px);box-shadow:0 1px 0 #f59e0b;}
+  .kb.del{background:#fee2e2;border-color:#fca5a5;box-shadow:0 4px 0 #ef4444;color:#b91c1c;gap:2px;}
+  .kb.del .ic{font-size:1.25rem;line-height:1;}.kb.del .tx{font-size:.8rem;line-height:1;font-weight:900;}
+  .kb.ok{background:#22c55e;color:#fff;border-color:#86efac;box-shadow:0 4px 0 #15803d;}
+
+  /* 直式 */
+  .vf{display:grid;grid-template-columns:2.8rem 4.8rem 4.8rem;font-size:3rem;font-weight:900;justify-content:center;border-radius:1rem;overflow:hidden;}
+  .vc{height:4.6rem;display:flex;align-items:center;justify-content:center;position:relative;}
+  .vf .vc:nth-child(3n+2){background:#eff6ff;}
+  .vf .vc:nth-child(3n){background:#fff7ed;}
+  .vc.hd{height:2.9rem;font-size:1.1rem;}
+  .vc.cr{height:3rem;font-size:1.4rem;}
+  .vc.ln{border-top:6px solid var(--ink);}
+  .vc.opc{color:#ef4444;}
+  .colh{border-radius:999px;padding:0 .6rem;color:#fff;}
+  .colh.t{background:#3b82f6;}.colh.o{background:#f97316;}
+  .bdig{position:relative;display:inline-block;}
+  .bdig.pulse{cursor:pointer;color:#e11d48;animation:pulse 1s infinite;}
+  .bdig.struck::after{content:"";position:absolute;left:-8px;right:-8px;top:50%;height:5px;background:#ef4444;transform:rotate(-25deg);border-radius:3px;}
+  @keyframes pulse{50%{transform:scale(1.25);}}
+  .tiny{font-size:1.5rem;color:#e11d48;font-weight:900;transition:opacity .3s;}
+
+  /* 價目表 */
+  .menu{background:#3f6b5a;color:#fff;border:8px solid #b5835a;border-radius:1rem;padding:.8rem 1.4rem;max-width:420px;margin:0 auto;box-shadow:0 6px 0 #0002;}
+  .menu-h{text-align:center;font-size:1.5rem;font-weight:900;color:#ffe066;margin-bottom:.3rem;}
+  .mrow{display:flex;justify-content:space-between;align-items:center;font-size:1.6rem;font-weight:800;padding:.2rem 0;}
+  .pr{font-size:2rem;font-weight:900;color:#fff;}
+  .stain{display:inline-block;width:1.6rem;height:2rem;vertical-align:middle;border-radius:45% 55% 50% 50%;
+    background:radial-gradient(circle at 40% 40%,#8b5a2b,#5c3a1a 70%);box-shadow:0 0 0 4px #7a4a2288;}
+  .receipt{background:#fff;border:3px dashed #9ca3af;border-radius:.8rem;padding:.8rem 1.2rem;font-size:1.4rem;font-weight:800;line-height:2.4rem;max-width:460px;margin:.8rem auto;}
+
+  /* 硬幣 */
+  .coin{border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-weight:900;color:#5b3a1e;flex:none;
+    box-shadow:inset 0 -6px 0 rgba(0,0,0,.15),0 5px 0 rgba(0,0,0,.18);border:4px solid rgba(255,255,255,.6);transition:transform .1s;}
+  .coin:active{transform:scale(.9);}
+  .c50{width:84px;height:84px;font-size:1.9rem;background:radial-gradient(circle at 35% 30%,#fff3b0,#f4c430 60%,#c99700);}
+  .c10{width:72px;height:72px;font-size:1.7rem;background:radial-gradient(circle at 35% 30%,#fff,#d4d4d8 60%,#9ca3af);}
+  .c5{width:62px;height:62px;font-size:1.5rem;background:radial-gradient(circle at 35% 30%,#fff,#cbd5e1 60%,#94a3b8);}
+  .c1{width:52px;height:52px;font-size:1.3rem;background:radial-gradient(circle at 35% 30%,#ffe2c4,#d99a5b 60%,#a76a35);}
+  .coin.sm{transform:scale(.78);margin:-6px;}
+  .mc{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-size:.8rem;font-weight:900;margin:1px;width:30px;height:30px;}
+  .mc.c50{width:34px;height:34px;font-size:.85rem;border-width:2px}.mc.c10{width:30px;height:30px;font-size:.85rem;border-width:2px}
+  .mc.c5{width:27px;height:27px;font-size:.8rem;border-width:2px}.mc.c1{width:24px;height:24px;font-size:.75rem;border-width:2px}
+  .tray{min-height:104px;background:#fef3c7;border:4px dashed #f59e0b;border-radius:1.3rem;display:flex;flex-wrap:wrap;gap:.2rem;align-items:center;justify-content:center;padding:.5rem;}
+  .wcard{background:#fff;border:4px solid #e5e7eb;border-radius:1.2rem;padding:.6rem;text-align:center;}
+  .wcard.mine{border-color:#facc15;background:#fefce8;}
+  .wcard.best{border-color:#22c55e;box-shadow:0 0 0 5px #bbf7d0;transform:scale(1.04);}
+
+  /* 直尺 */
+  .ruler-scroll{overflow-x:auto;padding-bottom:.3rem;}
+  .ruler-wrap{position:relative;height:150px;margin:0 auto;}
+  .straw{position:absolute;top:22px;height:24px;border-radius:12px;transition:left .35s cubic-bezier(.3,1.4,.6,1);
+    background:repeating-linear-gradient(90deg,#ffd60a 0 14px,#ffe866 14px 22px);box-shadow:0 3px 0 #c9a400;}
+  .ruler{position:absolute;left:0;right:0;top:60px;height:76px;background:linear-gradient(#fef9c3,#fde68a);border:3px solid #d97706;border-radius:.6rem;}
+  .tick{position:absolute;top:0;background:#7c2d12;transform:translateX(-50%);}
+  .tick.major{width:3px;height:30px;}.tick.minor{width:2px;height:15px;}
+  .tnum{position:absolute;top:32px;transform:translateX(-50%);font-weight:900;font-size:1.2rem;}
+  .zero-line{position:absolute;top:6px;height:58px;border-left:4px dashed #ef4444;}
+
+  /* 杯子實測 */
+  .cupsim{position:relative;width:190px;height:330px;overflow:hidden;margin:0 auto;}
+  .cup2{position:absolute;bottom:0;left:40px;width:110px;border:5px solid #94a3b8;border-top:none;border-radius:0 0 1.2rem 1.2rem;background:rgba(255,255,255,.55);overflow:hidden;}
+  .tea{position:absolute;left:0;right:0;bottom:0;height:85%;background:linear-gradient(#e4c29e,#c69c6d);opacity:.75;}
+  .pearl{position:absolute;width:13px;height:13px;border-radius:50%;background:#3b2314;}
+  .straw2{position:absolute;left:88px;width:14px;display:flex;flex-direction:column;border-radius:7px;overflow:hidden;z-index:2;box-shadow:0 0 0 2px #0002;}
+  .rim{position:absolute;left:0;right:0;border-top:3px dashed #ef4444;z-index:3;}
+  .rimtag{position:absolute;right:0;font-size:.85rem;font-weight:900;color:#ef4444;z-index:3;background:#fff;border-radius:6px;padding:0 4px;}
+  .res{border-radius:1rem;padding:.4rem .8rem;font-size:1.3rem;font-weight:900;text-align:center;margin-top:.4rem;}
+  .res.bad{background:#fee2e2;color:#b91c1c;}.res.good{background:#dcfce7;color:#15803d;}
+  .seg{height:26px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1rem;text-shadow:0 1px 2px #0006;border-right:3px solid #fff;}
+
+  /* 怒氣值 */
+  .abar{width:min(46vw,320px);height:24px;background:#fff;border:4px solid #fca5a5;border-radius:999px;overflow:hidden;}
+  #angerFill{height:100%;width:30%;background:linear-gradient(90deg,#fde047,#f97316,#ef4444);transition:width .8s cubic-bezier(.3,1.4,.5,1);}
+
+  /* 瓶子 & 小杯 */
+  .bwrap{display:flex;flex-direction:column;align-items:center;transition:transform .35s;transform-origin:50% 80%;}
+  .bwrap.tilt{transform:rotate(-28deg) translateX(10px);}
+  .neck{border:5px solid #94a3b8;border-bottom:none;background:rgba(255,255,255,.6);border-radius:.4rem .4rem 0 0;}
+  .neck.tall{width:30px;height:24px;}.neck.fat{width:52px;height:18px;}
+  .bottle{display:flex;flex-direction:column;justify-content:flex-end;border:5px solid #94a3b8;background:rgba(255,255,255,.6);overflow:hidden;}
+  .bottle.tall{width:64px;height:220px;border-radius:1rem 1rem .8rem .8rem;}
+  .bottle.fat{width:144px;height:124px;border-radius:1.4rem 1.4rem 1rem 1rem;}
+  .layer{transition:height .4s ease;flex:none;}
+  .layer.gone{height:0!important;}
+  .sc{position:relative;width:32px;height:42px;border:3px solid #94a3b8;border-top:none;border-radius:0 0 .5rem .5rem;overflow:hidden;background:#fff;}
+  .sc .fill{position:absolute;left:0;right:0;bottom:0;height:0;transition:height .45s;}
+  .sc.full .fill{height:88%;}
+  .chart{display:flex;align-items:flex-end;gap:2rem;height:230px;padding:0 1rem;border-left:4px solid var(--ink);border-bottom:4px solid var(--ink);}
+  .barc{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+  .bar{width:64px;border-radius:.6rem .6rem 0 0;transition:height .4s cubic-bezier(.3,1.4,.5,1);}
+
+  /* 地圖卡片 */
+  .lvcard{position:relative;width:260px;border-radius:1.8rem;padding:1.2rem;text-align:center;background:#fff;border:6px solid #fcd34d;box-shadow:0 8px 0 #f59e0b;transition:transform .2s;}
+  .lvcard:hover:not(.lock){transform:translateY(-6px) rotate(-1deg);}
+  .lvcard.lock{filter:grayscale(1);opacity:.75;box-shadow:0 8px 0 #9ca3af;border-color:#d1d5db;cursor:not-allowed;}
+  .lvcard.done{border-color:#4ade80;box-shadow:0 8px 0 #16a34a;}
+  .lvcard.newly{animation:unlock 1.2s ease 2;}
+  @keyframes unlock{0%,100%{transform:scale(1)}30%{transform:scale(1.12) rotate(3deg)}60%{transform:scale(.96) rotate(-3deg)}}
+  .role{position:relative;border:6px solid #e5e7eb;border-radius:1.8rem;padding:1rem 1.4rem;background:#fff;transition:.2s;width:100%;}
+  .role.sel{border-color:#22c55e;background:#f0fdf4;box-shadow:0 0 0 6px #bbf7d0;}
+  .role .chk{position:absolute;top:-14px;right:-14px;width:44px;height:44px;border-radius:999px;background:#22c55e;color:#fff;font-size:1.6rem;display:none;align-items:center;justify-content:center;}
+  .role.sel .chk{display:flex;}
+
+  .pcard{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;border:4px solid #e5e7eb;border-radius:1.2rem;background:#fff;font-size:1.4rem;font-weight:800;cursor:pointer;user-select:none;line-height:2.2rem;}
+  .pcard .box{width:2.4rem;height:2.4rem;flex:none;border:4px solid #d1d5db;border-radius:.6rem;display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff;}
+  .pcard.on{border-color:#4ade80;background:#f0fdf4;}
+  .pcard.on .box{background:#22c55e;border-color:#22c55e;}
+
+  #toast{transition:opacity .25s,transform .25s;}
+  #toast.show{opacity:1;transform:translate(-50%,0) scale(1);}
+  #toast.hide{opacity:0;transform:translate(-50%,-20px) scale(.9);pointer-events:none;}
+  .pop{animation:pop .45s cubic-bezier(.3,1.6,.5,1);}
+  @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+  .bob{animation:bob 1.4s ease-in-out infinite;}
+  @keyframes bob{50%{transform:translateY(-8px);}}
+  .medal{width:170px;height:170px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:5rem;position:relative;
+    background:radial-gradient(circle at 35% 30%,#fff7c2,#facc15 55%,#ca8a04);border:8px solid #fde047;box-shadow:0 0 40px #facc15,0 10px 0 #a16207;animation:spinm 3s ease-in-out infinite;}
+  .medal::before,.medal::after{content:"";position:absolute;top:-70px;width:44px;height:90px;z-index:-1;}
+  .medal::before{left:40px;background:#ef4444;transform:rotate(18deg);}
+  .medal::after{right:40px;background:#3b82f6;transform:rotate(-18deg);}
+  @keyframes spinm{0%,100%{transform:rotate(-8deg) scale(1)}50%{transform:rotate(8deg) scale(1.08)}}
+  .cf{position:fixed;top:-24px;width:12px;height:18px;z-index:95;pointer-events:none;animation:fall linear forwards;}
+  @keyframes fall{to{transform:translateY(112vh) rotate(900deg);}}
+  .shake{animation:shake .4s;}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+  .frm-card{min-width:4.4rem;height:4.4rem;font-size:2.2rem;font-weight:900;border-radius:1rem;background:#fff;border:4px solid #fcd34d;box-shadow:0 5px 0 #f59e0b;padding:0 .7rem;}
+  .frm-card:active{transform:translateY(3px);box-shadow:0 2px 0 #f59e0b;}
+  .frm-card.used{opacity:.25;pointer-events:none;}
+  .fslot{display:inline-flex;align-items:center;justify-content:center;min-width:4.6rem;height:4.6rem;border:4px dashed #f59e0b;border-radius:1rem;background:#fffbeb;
+    font-size:2.3rem;font-weight:900;color:#1d4ed8;cursor:pointer;}
+  .fslot.next{border-color:#f97316;box-shadow:0 0 0 5px #fed7aa;}
+  .fslot.filled{border-style:solid;background:#fff;}
+  .undo-btn{background:#fff;border:3px solid #fb923c;color:#c2410c;font-weight:900;border-radius:999px;padding:.2rem .9rem;font-size:1.1rem;box-shadow:0 4px 0 #fb923c;white-space:nowrap;}
+  .undo-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #fb923c;}
+  .kb.back{grid-column:span 3;width:100%;flex-direction:row;gap:.4rem;font-size:1.2rem;background:#fff7ed;border-color:#fdba74;box-shadow:0 4px 0 #fb923c;color:#c2410c;}
+  .dragb{touch-action:none;cursor:grab;position:relative;z-index:5;user-select:none;}
+  .dragb.dragging{cursor:grabbing;z-index:60;filter:drop-shadow(0 14px 10px #0004);}
+  .dragb .bwrap{transition:transform .3s;}
+  .dragb.pouring .bwrap{transform:rotate(-60deg);}
+  .grab-tip{font-size:1rem;font-weight:900;color:#0369a1;background:#e0f2fe;border-radius:999px;padding:.1rem .7rem;margin-top:.3rem;display:inline-block;}
+  .stream{position:fixed;width:10px;border-radius:5px;z-index:59;pointer-events:none;}
+  .sc{width:40px;height:52px;}
+  .cupcell{display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .cupno{font-size:.85rem;font-weight:900;background:#fff;border:2px solid #bae6fd;border-radius:999px;padding:0 .45rem;white-space:nowrap;color:#0369a1;}
+  .cupcell.got .cupno{background:#22c55e;border-color:#22c55e;color:#fff;}
+  .predgrid{display:grid;grid-template-columns:76px max-content max-content minmax(200px,1fr);column-gap:1rem;row-gap:.6rem;align-items:center;}
+  .pc{display:flex;align-items:center;height:88px;}
+  .pc.ic{justify-content:center;}
+  .ph{font-weight:900;color:#a16207;font-size:1rem;border-bottom:3px solid #fde68a;padding-bottom:.2rem;}
+  .ptrack{position:relative;width:100%;height:48px;background:#f1f5f9;border-radius:999px;overflow:hidden;border:3px solid #e2e8f0;}
+  .pbar{height:100%;width:0;border-radius:999px;transition:width .45s cubic-bezier(.3,1.4,.5,1);}
+  .pval{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:1.35rem;font-weight:900;}
+  .cwall{display:grid;grid-template-columns:230px 470px 96px 44px 44px 112px;column-gap:12px;row-gap:14px;align-items:center;position:relative;padding:1.6rem 0 .4rem;}
+  .cwall .cl{font-size:1.2rem;font-weight:900;text-align:right;white-space:nowrap;}
+  .cwall .cn{font-size:1.4rem;font-weight:900;text-align:right;white-space:nowrap;}
+  .cwall .cs{font-size:1.6rem;font-weight:900;text-align:center;}
+  .cwall .cr{font-size:1.3rem;font-weight:900;white-space:nowrap;}
+  .cbar{display:flex;height:34px;border-radius:10px;overflow:hidden;}
+  .cbar > div{height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;text-shadow:0 1px 2px #0006;box-shadow:inset -2px 0 0 #fff;}
+  .sc.target{box-shadow:0 0 0 4px #fde047;animation:pulse 1s infinite;}
+  .wallrow{display:flex;align-items:center;gap:.8rem;margin:.5rem 0;}
+  .myth{background:linear-gradient(135deg,#fef9c3,#dcfce7);border:4px solid #4ade80;border-radius:1.2rem;padding:.8rem 1rem;font-size:1.4rem;font-weight:900;line-height:2.3rem;text-align:center;}
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+<div id="fade" class="fixed inset-0 bg-white z-[99] pointer-events-none opacity-0 transition-opacity duration-500"></div>
+
+<!-- HUD -->
+<header id="hud" class="hidden fixed top-0 inset-x-0 z-40 flex flex-wrap items-center justify-between gap-2 p-3 pointer-events-none">
+  <div class="flex gap-2 pointer-events-auto">
+    <div id="hudTitle" class="pill text-lg"></div>
+    <div id="hudName" class="pill text-lg hidden"></div>
+  </div>
+  <div class="flex flex-wrap gap-2 pointer-events-auto">
+    <div class="pill">⭐ × <span id="stars">0</span></div>
+    <button id="mapBtn" class="pill hidden">🗺️ 地圖</button>
+    <button id="zyBtn" class="pill"></button>
+    <button id="voiceBtn" class="pill">🗣️ 語音</button>
+    <button id="sndBtn" class="pill">🔊</button>
+  </div>
+</header>
+
+<!-- 怒氣值 -->
+<div id="anger" class="hidden fixed z-40 top-[4.4rem] left-1/2 -translate-x-1/2 flex items-center gap-3 bg-white/95 border-4 border-red-300 rounded-full px-4 py-2 shadow-xl">
+  <span id="angerFace" class="text-4xl">😐</span>
+  <b class="text-lg whitespace-nowrap" id="angerLabel"></b>
+  <div class="abar"><div id="angerFill"></div></div>
+  <b id="angerNum" class="text-xl w-10 text-right">30</b>
+</div>
+
+<!-- 街道 UI -->
+<div id="streetUI" class="fixed inset-0 z-30 pointer-events-none">
+  <div class="absolute top-5 left-1/2 -translate-x-1/2 text-center w-[94vw]">
+    <div id="streetTitle" class="pop inline-block bg-white/90 border-[6px] border-amber-300 rounded-[2rem] px-8 py-3 text-3xl md:text-5xl font-black text-amber-700 shadow-xl leading-[3.6rem] md:leading-[4.6rem]"></div>
+    <div id="walkTip" class="mt-3 inline-block bg-sky-500 text-white rounded-full px-6 py-2 text-xl md:text-2xl font-black shadow-lg"></div>
+  </div>
+  <button id="skipBtn" class="pointer-events-auto absolute bottom-6 right-6 pill text-xl">跳過 ⏭</button>
+  <button id="enterBtn" class="hidden pointer-events-auto absolute bottom-10 left-1/2 -translate-x-1/2 btn-go text-3xl bob"></button>
+</div>
+
+<!-- 角色選擇與登入 -->
+<div id="login" class="hidden fixed inset-0 z-50 flex items-start justify-center p-4 pt-[7vh] bg-amber-100/50">
+  <div class="pop bg-white/95 rounded-[2.5rem] border-[6px] border-amber-300 shadow-2xl max-w-lg w-full p-7 text-center max-h-[94vh] overflow-y-auto">
+    <h2 id="loginTitle" class="text-4xl font-black text-amber-700 leading-[3.8rem] mb-3"></h2>
+    <button id="roleCard" class="role">
+      <span class="chk">✔</span>
+      <div class="text-7xl mb-1">👦🧋👧</div>
+      <div id="roleName" class="text-2xl font-black leading-[2.6rem]"></div>
+      <div class="text-lg font-bold text-amber-700">男店員 ＋ 女店員同框，兩人一起顧店！</div>
+    </button>
+    <div class="mt-5 text-left">
+      <label id="nameLabel" class="text-2xl font-black block mb-2 leading-[2.6rem]"></label>
+      <input id="nameIn" maxlength="10" autocomplete="off" placeholder="例如：小明和小華"
+        class="w-full text-3xl font-black text-center rounded-2xl border-4 border-amber-300 px-4 py-3 outline-none focus:border-green-400 focus:ring-4 focus:ring-green-100">
+    </div>
+    <button id="loginBtn" class="btn-go mt-6 text-3xl"></button>
+  </div>
+</div>
+
+<!-- 對話框 -->
+<div id="dlg" class="hidden fixed z-[60] top-[5rem] left-1/2 -translate-x-1/2 w-[min(95vw,880px)]">
+  <div class="pop flex items-start gap-3">
+    <div id="dlgAva" class="text-7xl md:text-8xl shrink-0 leading-none bob">🧔</div>
+    <div class="flex-1 bg-white/95 border-[5px] border-amber-300 rounded-[2rem] p-5 shadow-2xl">
+      <div id="dlgName" class="inline-block bg-amber-400 text-white font-black text-xl rounded-full px-4 py-1 mb-2"></div>
+      <div id="dlgText" class="text-2xl md:text-[1.7rem] font-bold leading-[2.6rem] md:leading-[2.9rem]"></div>
+      <div class="text-right mt-2"><button id="dlgNext" class="btn-alt">繼續 ▶</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- 關卡地圖 -->
+<div id="map" class="hidden fixed inset-0 z-40 flex flex-col items-center justify-start p-4 pt-20 bg-gradient-to-b from-sky-200/70 to-amber-100/80 overflow-y-auto">
+  <h2 id="mapTitle" class="text-4xl md:text-5xl font-black text-amber-700 mb-2 leading-[4rem]"></h2>
+  <p id="mapSub" class="text-xl md:text-2xl font-bold mb-6 text-center leading-[2.4rem]"></p>
+  <div id="mapCards" class="flex flex-wrap justify-center items-center gap-6"></div>
+</div>
+
+<!-- 題目面板 -->
+<section id="panel" class="hidden fixed z-30 top-[4.6rem] left-1/2 -translate-x-1/2 w-[min(98vw,1120px)] max-h-[calc(100vh-5.4rem)] overflow-y-auto
+  bg-white/95 rounded-[2rem] border-[5px] border-amber-300 shadow-2xl p-4 md:p-5"></section>
+
+<!-- 過關 -->
+<div id="clear" class="hidden fixed inset-0 z-[65] items-start justify-center p-4 pt-[9vh] bg-black/40">
+  <div class="pop bg-white rounded-[2.5rem] border-[6px] border-green-400 shadow-2xl max-w-md w-full p-7 text-center">
+    <div id="clearIcon" class="text-8xl bob">🏆</div>
+    <h2 id="clearTitle" class="text-4xl font-black text-green-600 leading-[4rem] mt-2"></h2>
+    <p id="clearText" class="text-2xl font-bold my-4 leading-[2.6rem]"></p>
+    <button id="clearBtn" class="btn-go"></button>
+  </div>
+</div>
+
+<!-- 減塑承諾 -->
+<div id="promise" class="hidden fixed inset-0 z-[66] items-start justify-center p-4 pt-[6vh] bg-black/40">
+  <div class="pop bg-white rounded-[2.5rem] border-[6px] border-sky-400 shadow-2xl max-w-xl w-full p-6 max-h-[94vh] overflow-y-auto">
+    <div class="text-center"><span class="inline-block bg-sky-500 text-white font-black text-xl rounded-full px-5 py-1">🐢 SDGs 14 保育海洋生態</span></div>
+    <h2 id="promiseTitle" class="text-3xl md:text-4xl font-black text-sky-700 text-center leading-[3.8rem] mt-2"></h2>
+    <p id="promiseSub" class="text-xl font-bold text-center mb-4 leading-[2.4rem]"></p>
+    <div id="pList" class="space-y-3"></div>
+    <div class="text-center mt-5"><button id="pBtn" class="btn-go"></button></div>
+  </div>
+</div>
+
+<!-- 頒獎 -->
+<div id="award" class="hidden fixed inset-0 z-[80] items-start justify-center p-4 pt-[4vh] bg-black/50">
+  <div class="pop bg-gradient-to-b from-yellow-50 to-white rounded-[2.5rem] border-[6px] border-yellow-400 shadow-2xl max-w-lg w-full p-7 pt-24 text-center max-h-[96vh] overflow-y-auto">
+    <div class="medal">🌏</div>
+    <h2 id="awardTitle" class="text-4xl font-black text-amber-600 leading-[4rem] mt-4"></h2>
+    <div id="awardName" class="text-2xl font-black"></div>
+    <div id="awardTo" class="text-xl font-bold mt-1"></div>
+    <div class="text-3xl font-black my-3">⭐ × <span id="awardStars">0</span></div>
+    <ul id="awardList" class="text-left text-xl font-bold space-y-2 bg-sky-50 rounded-2xl p-4 border-4 border-sky-200"></ul>
+    <div class="flex flex-wrap justify-center gap-2 my-4 text-lg font-black">
+      <span class="px-3 py-1 rounded-full bg-sky-500 text-white">SDG 14 保育海洋生態</span>
+      <span class="px-3 py-1 rounded-full bg-amber-500 text-white">SDG 12 負責任消費</span>
+    </div>
+    <button id="againBtn" class="btn-go"></button>
+  </div>
+</div>
+
+<div id="toast" class="hide fixed z-[70] left-1/2 top-[12%]"></div>
+
+<script>
+/* =========================================================
+   1. 注音字典、工具
+========================================================= */
+const ZY = {
+  '永續':'ㄩㄥˇ ㄒㄩˋ','飲料店':'ㄧㄣˇ ㄌㄧㄠˋ ㄉㄧㄢˋ','數學':'ㄕㄨˋ ㄒㄩㄝˊ','小':'ㄒㄧㄠˇ','店員':'ㄉㄧㄢˋ ㄩㄢˊ','店長':'ㄉㄧㄢˋ ㄓㄤˇ',
+  '老闆':'ㄌㄠˇ ㄅㄢˇ','開始':'ㄎㄞ ㄕˇ','角色':'ㄐㄧㄠˇ ㄙㄜˋ','選擇':'ㄒㄩㄢˇ ㄗㄜˊ','名字':'ㄇㄧㄥˊ ˙ㄗ','確定':'ㄑㄩㄝˋ ㄉㄧㄥˋ',
+  '關卡':'ㄍㄨㄢ ㄑㄧㄚˇ','地圖':'ㄉㄧˋ ㄊㄨˊ','解鎖':'ㄐㄧㄝˇ ㄙㄨㄛˇ','進店':'ㄐㄧㄣˋ ㄉㄧㄢˋ',
+  '找':'ㄓㄠˇ','草莓牛奶':'ㄘㄠˇ ㄇㄟˊ ㄋㄧㄡˊ ㄋㄞˇ','鬆餅':'ㄙㄨㄥ ㄅㄧㄥˇ','價目表':'ㄐㄧㄚˋ ㄇㄨˋ ㄅㄧㄠˇ','線索':'ㄒㄧㄢˋ ㄙㄨㄛˇ',
+  '直式':'ㄓˊ ㄕˋ','橫式':'ㄏㄥˊ ㄕˋ','十位':'ㄕˊ ㄨㄟˋ','個位':'ㄍㄜˋ ㄨㄟˋ','進位':'ㄐㄧㄣˋ ㄨㄟˋ','借位':'ㄐㄧㄝˋ ㄨㄟˋ',
+  '破解':'ㄆㄛˋ ㄐㄧㄝˇ','找錢':'ㄓㄠˇ ㄑㄧㄢˊ','驗算':'ㄧㄢˋ ㄙㄨㄢˋ','硬幣':'ㄧㄥˋ ㄅㄧˋ','托盤':'ㄊㄨㄛ ㄆㄢˊ','湊':'ㄘㄡˋ',
+  '展示牆':'ㄓㄢˇ ㄕˋ ㄑㄧㄤˊ','珍珠奶茶':'ㄓㄣ ㄓㄨ ㄋㄞˇ ㄔㄚˊ','吸管':'ㄒㄧ ㄍㄨㄢˇ','直尺':'ㄓˊ ㄔˇ','測量':'ㄘㄜˋ ㄌㄧㄤˊ',
+  '對齊':'ㄉㄨㄟˋ ㄑㄧˊ','刻度':'ㄎㄜˋ ㄉㄨˋ','公分':'ㄍㄨㄥ ㄈㄣ','長度':'ㄔㄤˊ ㄉㄨˋ','備料區':'ㄅㄟˋ ㄌㄧㄠˋ ㄑㄩ',
+  '怒氣值':'ㄋㄨˋ ㄑㄧˋ ㄓˊ','示範':'ㄕˋ ㄈㄢˋ','實測':'ㄕˊ ㄘㄜˋ','比較':'ㄅㄧˇ ㄐㄧㄠˋ','容量':'ㄖㄨㄥˊ ㄌㄧㄤˋ',
+  '高瘦瓶':'ㄍㄠ ㄕㄡˋ ㄆㄧㄥˊ','矮胖瓶':'ㄞˇ ㄆㄤˋ ㄆㄧㄥˊ','彩虹奶昔':'ㄘㄞˇ ㄏㄨㄥˊ ㄋㄞˇ ㄒㄧ','預測':'ㄩˋ ㄘㄜˋ',
+  '長條圖':'ㄔㄤˊ ㄊㄧㄠˊ ㄊㄨˊ','實證':'ㄕˊ ㄓㄥˋ','小杯子':'ㄒㄧㄠˇ ㄅㄟ ˙ㄗ','迷思':'ㄇㄧˊ ㄙ','減塑':'ㄐㄧㄢˇ ㄙㄨˋ',
+  '承諾':'ㄔㄥˊ ㄋㄨㄛˋ','勳章':'ㄒㄩㄣ ㄓㄤ','大師':'ㄉㄚˋ ㄕ','恭喜':'ㄍㄨㄥ ㄒㄧˇ','完勝':'ㄨㄢˊ ㄕㄥˋ',
+  '自備':'ㄗˋ ㄅㄟˋ','環保杯':'ㄏㄨㄢˊ ㄅㄠˇ ㄅㄟ','環保吸管':'ㄏㄨㄢˊ ㄅㄠˇ ㄒㄧ ㄍㄨㄢˇ','一次性':'ㄧ ㄘˋ ㄒㄧㄥˋ',
+  '塑膠':'ㄙㄨˋ ㄐㄧㄠ','海洋':'ㄏㄞˇ ㄧㄤˊ','再玩一次':'ㄗㄞˋ ㄨㄢˊ ㄧ ㄘˋ','注音':'ㄓㄨˋ ㄧㄣ','送出':'ㄙㄨㄥˋ ㄔㄨ'
+};
+const R = w => { const z = ZY[w]; if(!z) return w; const zs = z.split(' ');
+  return Array.from(w).map((c,i)=>`<ruby>${c}<rt>${zs[i]||''}</rt></ruby>`).join(''); };
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const wait = ms => new Promise(r=>setTimeout(r,ms));
+const CN = ['','一','二','三'];
+const show = (el, flex) => { el.classList.remove('hidden'); if(flex) el.classList.add('flex'); };
+const hide = el => { el.classList.add('hidden'); el.classList.remove('flex'); };
+
+/* =========================================================
+   2. 音效（Web Audio）＋ 語音（Speech Synthesis）
+========================================================= */
+let AC = null, soundOn = true, voiceOn = true;
+function ac(){ AC = AC || new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==='suspended') AC.resume(); return AC; }
+function sfx(type){
+  if(!soundOn) return;
+  try{
+    const a = ac();
+    const SET = { ok:[[523,'triangle'],[659,'triangle'],[784,'triangle']], no:[[260,'square'],[196,'square']],
+      tap:[[880,'sine']], key:[[1046,'sine']], coin:[[988,'triangle'],[1319,'triangle']], drip:[[620,'sine'],[930,'sine'],[1240,'sine']],
+      win:[[523,'triangle'],[659,'triangle'],[784,'triangle'],[1047,'triangle'],[1319,'triangle'],[1568,'triangle']],
+      unlock:[[784,'triangle'],[988,'triangle'],[1175,'triangle'],[1568,'triangle']], step:[[200,'sine']] }[type] || [[600,'sine']];
+    SET.forEach(([f,w],i)=>{
+      const o = a.createOscillator(), g = a.createGain(), t = a.currentTime + i*(type==='drip'?.05:.1);
+      o.type = w; o.frequency.value = f;
+      const vol = type==='no' ? .07 : type==='key' ? .08 : .2, dur = type==='win' ? .4 : .25;
+      g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+.02); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+      o.connect(g).connect(a.destination); o.start(t); o.stop(t+dur+.05);
+    });
+  }catch(e){}
+}
+function cheerSound(){
+  if(!soundOn) return;
+  try{
+    const a = ac(), len = a.sampleRate*2.6, buf = a.createBuffer(1,len,a.sampleRate), d = buf.getChannelData(0);
+    for(let i=0;i<len;i++) d[i] = (Math.random()*2-1) * (0.6+0.4*Math.sin(i/a.sampleRate*38));
+    const src = a.createBufferSource(), bp = a.createBiquadFilter(), g = a.createGain();
+    src.buffer = buf; bp.type = 'bandpass'; bp.frequency.value = 1300; bp.Q.value = .7;
+    const t = a.currentTime; g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.35,t+.25); g.gain.exponentialRampToValueAtTime(.0001,t+2.6);
+    src.connect(bp).connect(g).connect(a.destination); src.start(t);
+    [523,659,784,1047,784,1047,1319].forEach((f,i)=>{ const o=a.createOscillator(), gg=a.createGain(), tt=t+.1+i*.16;
+      o.type='square'; o.frequency.value=f; gg.gain.setValueAtTime(.0001,tt); gg.gain.exponentialRampToValueAtTime(.09,tt+.02); gg.gain.exponentialRampToValueAtTime(.0001,tt+(i===6?.8:.18));
+      o.connect(gg).connect(a.destination); o.start(tt); o.stop(tt+.9); });
+  }catch(e){}
+}
+function plain(html){
+  const d = document.createElement('div'); d.innerHTML = html; d.querySelectorAll('rt').forEach(r=>r.remove());
+  return d.textContent.replace(/[＋+]/g,'加').replace(/[−-]/g,'減').replace(/[＝=]/g,'等於').replace(/[＞>]/g,'大於').replace(/[＜<]/g,'小於')
+    .replace(/[△□▢]/g,'空格').replace(/[✔✅❌⭐🎉👍🤔]/g,'').replace(/\s+/g,' ');
+}
+let zhVoice = null;
+function pickVoice(){ const vs = speechSynthesis.getVoices(); zhVoice = vs.find(v=>/zh[-_]TW/i.test(v.lang)) || vs.find(v=>/zh/i.test(v.lang)) || null; }
+if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(html, interrupt){
+  if(!voiceOn || !('speechSynthesis' in window)) return;
+  try{
+    if(interrupt) speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(plain(html)); u.lang = 'zh-TW'; u.rate = 1.02; u.pitch = 1.2;
+    if(zhVoice) u.voice = zhVoice; speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/* =========================================================
+   3. 3D 世界：街道場景 ＋ 飲料店場景（Three.js）
+========================================================= */
+const W = (() => {
+  const cv = $('#scene');
+  const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, .1, 200);
+
+  const mat = (c,o={}) => new THREE.MeshStandardMaterial(Object.assign({color:c, roughness:.65}, o));
+  const B = (w,h,d) => new THREE.BoxGeometry(w,h,d);
+  const C = (a,b,h,s=28) => new THREE.CylinderGeometry(a,b,h,s);
+  const Sp = r => new THREE.SphereGeometry(r, 28, 18);
+  function mesh(par, geo, c, x, y, z, o){
+    const m = new THREE.Mesh(geo, c instanceof THREE.Material ? c : mat(c,o));
+    m.position.set(x,y,z); m.castShadow = true; m.receiveShadow = true; par.add(m); return m;
+  }
+  const redraws = [];
+  function textTex(drawFn, w=1024, h=200){
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const ctx = c.getContext('2d'), tex = new THREE.CanvasTexture(c);
+    const run = () => { drawFn(ctx, w, h); tex.needsUpdate = true; };
+    run(); redraws.push(run); return { tex, run };
+  }
+  if(document.fonts) document.fonts.ready.then(()=>redraws.forEach(f=>f()));
+  const FONT = s => `900 ${s}px Huninn, "Noto Sans TC", sans-serif`;
+  function lights(sc){
+    sc.add(new THREE.HemisphereLight(0xffffff, 0xffd6a5, .85));
+    const sun = new THREE.DirectionalLight(0xffffff, .8); sun.position.set(6,12,8); sun.castShadow = true;
+    sun.shadow.mapSize.set(2048,2048); Object.assign(sun.shadow.camera,{left:-30,right:30,top:20,bottom:-20,near:1,far:60});
+    sc.add(sun);
+  }
+
+  /* ---------- 人物工廠 ---------- */
+  function person(shirt, hair, o={}){
+    const g = new THREE.Group();
+    const shirtM = mat(shirt), hairM = mat(hair), skinM = mat(0xffd7b5);
+    const legs = [], arms = [];
+    [-.13,.13].forEach(x=>{ const p = new THREE.Group(); p.position.set(x,.68,0); g.add(p); mesh(p, C(.085,.085,.62), 0x3d405b, 0,-.31,0); legs.push(p); });
+    mesh(g, C(.27,.31,.75), shirtM, 0,1.05,0);
+    const apron = mesh(g, B(.42,.52,.04), o.apron || 0x2a9d8f, 0,1.0,.3); apron.visible = !!o.apron;
+    [-.37,.37].forEach(x=>{ const p = new THREE.Group(); p.position.set(x,1.36,0); g.add(p);
+      mesh(p, C(.07,.07,.55), shirtM, 0,-.27,0); mesh(p, Sp(.08), skinM, 0,-.57,0); arms.push(p); });
+    mesh(g, Sp(.3), skinM, 0,1.72,0);
+    mesh(g, new THREE.SphereGeometry(.32,28,18,0,Math.PI*2,0,Math.PI/2.1), hairM, 0,1.76,-.02);
+    const tail = mesh(g, Sp(.13), hairM, 0,1.74,-.32); tail.visible = !!o.girl;
+    const bow = mesh(g, Sp(.075), 0xff4d8d, 0,1.9,-.28); bow.visible = !!o.girl;
+    [-.1,.1].forEach(x=>mesh(g, Sp(.04), 0x222222, x,1.76,.27));
+    [-.17,.17].forEach(x=>{ const ch = mesh(g, Sp(.05), 0xff9eb5, x,1.66,.24); ch.scale.z = .4; });
+    const mouth = mesh(g, new THREE.TorusGeometry(.07,.017,8,16,Math.PI), 0xc0392b, 0,1.63,.28); mouth.rotation.z = Math.PI;
+    const must = mesh(g, B(.24,.05,.05), 0x3b2a1a, 0,1.67,.29); must.visible = !!o.must;
+    const hat = mesh(g, C(.22,.26,.28), 0xffffff, 0,2.08,0); hat.visible = !!o.hat;
+    g.userData = { legs, arms, shirtM, hairM, skinM, mouth, must, apron, tail, bow, hat };
+    return g;
+  }
+
+  /* =================== 街道場景 =================== */
+  const street = new THREE.Scene();
+  street.background = new THREE.Color(0xbfe9ff); street.fog = new THREE.Fog(0xbfe9ff, 35, 80);
+  lights(street);
+  const grass = mesh(street, new THREE.PlaneGeometry(120,60), 0x9ed89a, 0,0,0); grass.rotation.x = -Math.PI/2;
+  const road = mesh(street, new THREE.PlaneGeometry(120,6), 0x5c5f66, 0,.01,4.2); road.rotation.x = -Math.PI/2;
+  for(let x=-50;x<50;x+=3){ const d = mesh(street, new THREE.PlaneGeometry(1.4,.18), 0xffffff, x,.02,4.2); d.rotation.x = -Math.PI/2; }
+  mesh(street, B(120,.18,5.2), 0xf1e3c8, 0,.09,-1.4);
+  mesh(street, B(120,.22,.25), 0xd6c4a3, 0,.11,1.15);
+  for(let x=-50;x<50;x+=1.3){ const t = mesh(street, new THREE.PlaneGeometry(.04,5.2), 0xe2d1b0, x,.185,-1.4); t.rotation.x = -Math.PI/2; t.castShadow = false; }
+
+  const SHOPS = [
+    {x:-19, wall:0xffc8dd, awn:0xff6b9d, name:'🌸 花店'},
+    {x:-11, wall:0xffe5a0, awn:0xf4a261, name:'🥐 麵包店'},
+    {x:-3,  wall:0xbde0fe, awn:0x4895ef, name:'📚 書店'},
+    {x:5,   wall:0xb7efc5, awn:0x2a9d8f, name:'🧋 永續飲料店', drink:true},
+    {x:13,  wall:0xe9d5ff, awn:0x9b5de5, name:'🧸 玩具店'}
+  ];
+  let drinkShop = null, arrow = null, doorLight = null;
+  SHOPS.forEach(s=>{
+    const g = new THREE.Group(); g.position.set(s.x,0,-6); street.add(g);
+    mesh(g, B(6,4.5,4), s.wall, 0,2.25,0);
+    mesh(g, B(6.4,.4,4.4), 0xffffff, 0,4.6,0);
+    for(let i=0;i<8;i++){ const a = mesh(g, B(.75,.3,.9), i%2?0xffffff:s.awn, -2.625+i*.75,3.05,2.35); a.rotation.x = .45; }
+    mesh(g, B(1.4,2.4,.1), 0x8d6e63, 1.6,1.2,2.03);
+    mesh(g, Sp(.07), 0xffd166, 1.15,1.2,2.12);
+    mesh(g, B(2.6,1.6,.1), 0xdff6ff, -1.2,1.6,2.03, {emissive:0x9bd7ff, emissiveIntensity:.25});
+    mesh(g, B(2.8,.12,.3), 0xffffff, -1.2,.75,2.1);
+    const { tex } = textTex((x,w,h)=>{ x.fillStyle='#fff'; x.fillRect(0,0,w,h); x.strokeStyle='#5b3a1e'; x.lineWidth=12; x.strokeRect(6,6,w-12,h-12);
+      x.fillStyle='#5b3a1e'; x.font=FONT(110); x.textAlign='center'; x.textBaseline='middle'; x.fillText(s.name,w/2,h/2+6); }, 1024, 200);
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(4.8,.95), new THREE.MeshBasicMaterial({map:tex})); sign.position.set(0,3.95,2.07); g.add(sign);
+    if(s.drink){
+      drinkShop = g;
+      mesh(g, C(.8,.6,1.7), 0xffb4a2, 0,5.65,0);
+      mesh(g, C(.85,.85,.14), 0xffffff, 0,6.55,0);
+      for(let i=0;i<8;i++) mesh(g, Sp(.11), 0x3b2314, Math.cos(i)*.45,5.0,Math.sin(i)*.45);
+      const st = mesh(g, C(.08,.08,1.6), 0x52b788, .3,7.1,0); st.rotation.z = -.25;
+      mesh(g, B(1.4,.5,.06), 0x52b788, 0,5.6,.75).rotation.x = 0;
+      arrow = mesh(street, new THREE.ConeGeometry(.35,.7,4), 0xff4d6d, 6.6,3.2,-3.0, {emissive:0xff4d6d, emissiveIntensity:.5});
+      arrow.rotation.x = Math.PI; arrow.visible = false;
+      doorLight = new THREE.PointLight(0xfff1a8, 0, 6); doorLight.position.set(6.6,2,-2.8); street.add(doorLight);
+    }
+  });
+  [-15,-7,1,9].forEach(x=>{
+    mesh(street, C(.14,.18,1.6), 0x8d5524, x,.8,-3.4);
+    mesh(street, Sp(.8), 0x52b788, x,2.1,-3.4); mesh(street, Sp(.6), 0x74c69d, x+.35,2.5,-3.3);
+  });
+  [-23,-12,-1,10,20].forEach(x=>{
+    mesh(street, C(.06,.08,3.2), 0x495057, x,1.6,.7); mesh(street, Sp(.22), 0xfff3b0, x,3.3,.7, {emissive:0xfff3b0, emissiveIntensity:.6});
+  });
+  const clouds = [];
+  for(let i=0;i<7;i++){
+    const c = new THREE.Group(); c.position.set(-40+i*13, 12+Math.random()*3, -20-Math.random()*8); street.add(c);
+    [[0,0,0,1.6],[1.5,.2,0,1.2],[-1.5,.1,0,1.2],[.6,.9,0,1.1]].forEach(([x,y,z,r])=>mesh(c, Sp(r), 0xffffff, x,y,z).castShadow=false);
+    clouds.push(c);
+  }
+  const pair = new THREE.Group(); street.add(pair);
+  const boy = person(0x4cc9f0, 0x2b1d12, {apron:0x2a9d8f}); boy.position.x = -.48; pair.add(boy);
+  const girl = person(0xff8fab, 0x5a3825, {apron:0x2a9d8f, girl:true}); girl.position.x = .48; pair.add(girl);
+  const WALK = { from:-26, to:6.6, z:-1.4 };
+  let walking = false, arrived = false, onArrive = null;
+  pair.position.set(WALK.from,0,WALK.z); pair.rotation.y = Math.PI/2;
+  const sCamPos = new THREE.Vector3(WALK.from-3,3.4,9), sCamLook = new THREE.Vector3(WALK.from+2,1.6,-3);
+
+  /* =================== 飲料店場景 =================== */
+  const shop = new THREE.Scene();
+  shop.background = new THREE.Color(0xffeedd); shop.fog = new THREE.Fog(0xffeedd, 14, 34);
+  lights(shop);
+  const lamp = new THREE.PointLight(0xfff0d0, .55, 12); lamp.position.set(0,5,-1.5); shop.add(lamp);
+  const fl = mesh(shop, new THREE.PlaneGeometry(40,40), 0xf3d2a2, 0,0,0); fl.rotation.x = -Math.PI/2;
+  for(let i=-8;i<8;i++) for(let j=-8;j<2;j++) if((i+j)%2===0){ const t = mesh(shop, new THREE.PlaneGeometry(1,1), 0xeec48f, i+.5,.005,j+.5); t.rotation.x = -Math.PI/2; t.castShadow = false; }
+  mesh(shop, B(18,7,.3), 0xc7ebd9, 0,3.5,-7.5);
+  mesh(shop, B(18,1.2,.32), 0x8fd3b6, 0,.6,-7.45);
+  mesh(shop, B(.3,7,16), 0xffd9c0, -8,3.5,-1); mesh(shop, B(.3,7,16), 0xffd9c0, 8,3.5,-1);
+  mesh(shop, B(18,.3,16), 0xfff6ec, 0,7,-1);
+  mesh(shop, B(4.4,2.6,.1), 0xffffff, -4.4,3.2,-7.3);
+  mesh(shop, B(4,2.2,.12), 0xaee2ff, -4.4,3.2,-7.28, {emissive:0x6fc3ff, emissiveIntensity:.3});
+  mesh(shop, B(.08,2.2,.16), 0xffffff, -4.4,3.2,-7.22); mesh(shop, B(4,.08,.16), 0xffffff, -4.4,3.2,-7.22);
+  for(let i=0;i<8;i++){ const a = mesh(shop, B(.6,.35,.7), i%2?0xffffff:0x2a9d8f, -6.5+i*.6,4.75,-7.05); a.rotation.x = .35; }
+  mesh(shop, B(1.8,3,.12), 0xd4a373, 4.6,1.5,-7.3);
+  const fcols = [0xff6b6b,0xffd166,0x06d6a0,0x4cc9f0,0x9b5de5];
+  [-2.6,0,2.6].forEach((x,i)=>{
+    mesh(shop, C(.015,.015,1.6), 0x555555, x,6.2,-1.5);
+    mesh(shop, C(.15,.45,.4,24), fcols[i*2%5], x,5.25,-1.5);
+    mesh(shop, Sp(.13), 0xfff4c2, x,5.05,-1.5, {emissive:0xfff0a0, emissiveIntensity:1});
+  });
+  for(let i=0;i<22;i++){ const f = mesh(shop, new THREE.ConeGeometry(.2,.4,3), fcols[i%5], -7+i*.66,6.25-Math.sin(i/21*Math.PI)*.4,-5.5); f.rotation.x = Math.PI; f.castShadow = false; }
+  [1.8,2.8].forEach(y=>{ mesh(shop, B(.4,.08,4), 0xb5835a, 7.6,y,-3.5); for(let k=0;k<6;k++) mesh(shop, C(.15,.12,.45), fcols[(k+y*2|0)%5], 7.6,y+.27,-5.1+k*.62); });
+  mesh(shop, C(.5,.4,.9), 0xe76f51, -6.5,.45,-5.5);
+  [[0,1.5,0,.6],[.35,1.9,.1,.45],[-.3,1.95,-.1,.45],[0,2.3,0,.4]].forEach(([x,y,z,r])=>mesh(shop, Sp(r), 0x52b788, -6.5+x,y,-5.5+z));
+  let boardTxt = ['🧋 永續飲料店','歡迎光臨！'];
+  const board = textTex((x,w,h)=>{
+    x.fillStyle='#2f5d50'; x.fillRect(0,0,w,h); x.strokeStyle='#ffffff55'; x.lineWidth=10; x.strokeRect(24,24,w-48,h-48);
+    x.textAlign='center'; x.textBaseline='middle';
+    x.fillStyle='#fff'; x.font=FONT(104); x.fillText(boardTxt[0],w/2,155);
+    x.fillStyle='#ffe066'; x.font=FONT(66); x.fillText(boardTxt[1],w/2,300);
+  }, 1024, 420);
+  mesh(shop, B(4.7,2.05,.1), 0xb5835a, .6,4.6,-7.32);
+  const bm = new THREE.Mesh(new THREE.PlaneGeometry(4.4,1.8), new THREE.MeshBasicMaterial({map:board.tex})); bm.position.set(.6,4.6,-7.25); shop.add(bm);
+  function setBoard(t,s){ boardTxt = [t,s]; board.run(); }
+
+  const TOP = 1.2;
+  mesh(shop, B(6.4,1.1,1.2), 0xf6a96c, 0,.55,-.6);
+  mesh(shop, B(6.7,.1,1.4), 0xfffaf0, 0,1.15,-.6);
+  mesh(shop, B(.8,.45,.55), 0x7cc6a4, -2.45,TOP+.225,-.45);
+  mesh(shop, B(.6,.32,.05), 0x2b2d42, -2.45,TOP+.62,-.62).rotation.x = -.3;
+  mesh(shop, C(.18,.14,.3), 0xe76f51, 2.75,TOP+.15,-.5);
+  [[0,.42,0,.2],[.12,.55,0,.15],[-.12,.56,.04,.15]].forEach(([x,y,z,r])=>mesh(shop, Sp(r), 0x52b788, 2.75+x,TOP+y,-.5+z));
+
+  const cust = person(0xff8fab, 0x5a3825, {apron:0xffffff}); cust.scale.setScalar(1.3); cust.position.set(0,0,-3.2); shop.add(cust);
+  const SKIN = new THREE.Color(0xffd7b5), MAD = new THREE.Color(0xff8a80);
+  let angerV = 0;
+  function setCustomer(s){
+    if(!s || s.shirt===undefined) return;
+    const u = cust.userData; u.shirtM.color.setHex(s.shirt); u.hairM.color.setHex(s.hair);
+    u.must.visible = !!s.boss; u.apron.visible = !!s.boss; u.hat.visible = !!s.boss; u.tail.visible = u.bow.visible = !!s.girl;
+    cheerT = .8;
+  }
+  function setAnger(v){
+    angerV = v; const u = cust.userData;
+    u.skinM.color.copy(SKIN).lerp(MAD, Math.min(1,v/100)*.85);
+    u.mouth.rotation.z = v>=40 ? 0 : Math.PI; u.mouth.position.y = v>=40 ? 1.6 : 1.63;
+  }
+
+  const G = { map:new THREE.Group(), L1:new THREE.Group(), L2:new THREE.Group(), L3:new THREE.Group(), boss:new THREE.Group() };
+  Object.values(G).forEach(g=>shop.add(g));
+  [[-1.2,0xc8a27a],[-.4,0x9ee493],[.4,0xffb4a2],[1.2,0xcdb4db]].forEach(([x,c])=>{ mesh(G.map, C(.13,.1,.42), c, x,TOP+.21,-.7); mesh(G.map, C(.14,.14,.03), 0xffffff, x,TOP+.43,-.7); });
+
+  // L1：草莓牛奶、鬆餅、硬幣
+  mesh(G.L1, C(.14,.11,.46), 0xffafcc, -1.5,TOP+.23,-.7); mesh(G.L1, C(.15,.15,.04), 0xffffff, -1.5,TOP+.47,-.7);
+  mesh(G.L1, Sp(.07), 0xe63946, -1.5,TOP+.53,-.7);
+  mesh(G.L1, B(.45,.07,.45), 0xe9b864, -.85,TOP+.035,-.7);
+  for(let i=-1;i<=1;i++){ mesh(G.L1, B(.42,.02,.03), 0xb07d2b, -.85,TOP+.075,-.7+i*.12); mesh(G.L1, B(.03,.02,.42), 0xb07d2b, -.85+i*.12,TOP+.075,-.7); }
+  mesh(G.L1, B(.12,.04,.12), 0xfff3b0, -.85,TOP+.1,-.7);
+  const coinsG = new THREE.Group(); G.L1.add(coinsG);
+  function setCoins(list){
+    while(coinsG.children.length) coinsG.remove(coinsG.children[0]);
+    list.forEach((v,i)=>{ const r = {50:.12,10:.1,5:.09,1:.07}[v], c = {50:0xf4c430,10:0xd4d4d8,5:0xcbd5e1,1:0xd99a5b}[v];
+      mesh(coinsG, C(r,r,.03), c, .1+(i%7)*.27, TOP+.016, -.35-Math.floor(i/7)*.27, {metalness:.6, roughness:.3}); });
+  }
+
+  // L2：珍奶杯 + 拼接吸管 + 直尺
+  const glass = new THREE.MeshStandardMaterial({color:0xffffff, transparent:true, opacity:.3, roughness:.1});
+  const CUPH = .62, CUPY = TOP+.01;
+  mesh(G.L2, C(.18,.14,CUPH), glass, .3,CUPY+CUPH/2,-.65);
+  mesh(G.L2, C(.165,.13,CUPH*.8), new THREE.MeshStandardMaterial({color:0xc69c6d, transparent:true, opacity:.75}), .3,CUPY+CUPH*.4,-.65);
+  for(let i=0;i<10;i++) mesh(G.L2, Sp(.03), 0x3b2314, .3+Math.cos(i*1.7)*.08,CUPY+.04,-.65+Math.sin(i*1.7)*.08);
+  const strawG = new THREE.Group(); strawG.position.set(.3,CUPY,-.65); G.L2.add(strawG);
+  let strawTargetY = 0;
+  function setStraw(segs){
+    while(strawG.children.length) strawG.remove(strawG.children[0]);
+    const k = CUPH/27; let y = .02;
+    segs.forEach(s=>{ const h = s.cm*k; mesh(strawG, C(.02,.02,h), new THREE.Color(s.c).getHex(), 0,y+h/2,0); y += h; });
+    strawG.rotation.z = 0; strawG.position.y = CUPY + .9; strawTargetY = CUPY;
+  }
+  const rc = textTex((x,w,h)=>{ x.fillStyle='#fff3b0'; x.fillRect(0,0,w,h); x.fillStyle='#7c2d12'; x.font='bold 20px sans-serif'; x.textAlign='center';
+    for(let i=0;i<=16;i++){ const px = 30+i*40; x.fillRect(px-1,0,3,30); x.fillText(i,px,55); if(i<16) x.fillRect(px+19,0,2,15); } }, 700, 80);
+  const ruler = new THREE.Mesh(B(1.75,.02,.2), [mat(0xfde68a),mat(0xfde68a),new THREE.MeshStandardMaterial({map:rc.tex}),mat(0xfde68a),mat(0xfde68a),mat(0xfde68a)]);
+  ruler.position.set(-1.4,TOP+.01,-.35); ruler.receiveShadow = true; G.L2.add(ruler);
+  [[7,0xef4444,-.6],[9,0x22c55e,-.75],[14,0x3b82f6,-.9]].forEach(([cm,c,z])=>{ const s = mesh(G.L2, C(.022,.022,cm*.1), c, 1.3+cm*.05,TOP+.03,z); s.rotation.z = Math.PI/2; });
+
+  // L3：高瘦瓶、矮胖瓶（彩虹層）
+  const bottles = {};
+  function makeBottle(k, x, r, h, n){
+    const g = new THREE.Group(); g.position.set(x,TOP+.01,-.65); G.L3.add(g);
+    mesh(g, C(r,r,h), glass, 0,h/2,0); mesh(g, C(r*.45,r*.55,.14), glass, 0,h+.07,0);
+    const cols = rainbow(n), lh = h*.96/n, layers = [];
+    for(let i=0;i<n;i++){ const m = mesh(g, C(r*.94,r*.94,lh*.98), new THREE.Color(cols[n-1-i]).getHex(), 0,lh*i+lh/2+.005,0); layers.push(m); }
+    bottles[k] = { layers, n, poured:0 };
+  }
+  function bottleReset(){ Object.values(bottles).forEach(b=>{ b.poured=0; b.layers.forEach(l=>l.visible=true); }); }
+  function pour(k){ const b = bottles[k]; if(b.poured>=b.n) return; b.layers[b.n-1-b.poured].visible = false; b.poured++; }
+
+  // Boss：勳章、地球、環保杯
+  const medal = new THREE.Group(); medal.position.set(0,TOP+.75,-.75); G.boss.add(medal);
+  mesh(medal, C(.3,.3,.06), 0xf4c430, 0,0,0, {metalness:.7, roughness:.25, emissive:0x553300, emissiveIntensity:.3}).rotation.x = Math.PI/2;
+  mesh(medal, C(.15,.15,.08,5), 0xfff3b0, 0,0,.02, {emissive:0xffcc00, emissiveIntensity:.4}).rotation.x = Math.PI/2;
+  mesh(medal, B(.12,.45,.02), 0xef4444, -.08,.42,0).rotation.z = .3;
+  mesh(medal, B(.12,.45,.02), 0x3b82f6, .08,.42,0).rotation.z = -.3;
+  const globe = new THREE.Group(); globe.position.set(1.6,TOP+.32,-.6); G.boss.add(globe);
+  mesh(globe, Sp(.3), 0x4cc9f0, 0,0,0);
+  [[.15,.12,.2],[-.18,-.05,.19],[.05,-.2,.2],[-.1,.2,-.18]].forEach(([x,y,z])=>mesh(globe, Sp(.12), 0x52b788, x,y,z).scale.set(1,.7,.4));
+  mesh(G.boss, C(.13,.11,.42), 0x90be6d, -1.5,TOP+.21,-.6);
+
+  /* ---------- 彩帶 ---------- */
+  const conf = [];
+  function celebrate(n=220){
+    for(let i=0;i<n;i++){
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(.07,.12), new THREE.MeshBasicMaterial({color:new THREE.Color().setHSL(Math.random(),.85,.6), side:THREE.DoubleSide}));
+      m.position.set((Math.random()-.5)*8, 4+Math.random()*4, -4.5+Math.random()*4);
+      m.userData = {v:.8+Math.random()*1.4, rx:Math.random()*6, ry:Math.random()*6, sw:Math.random()*6};
+      shop.add(m); conf.push(m);
+    }
+  }
+
+  /* ---------- 控制 ---------- */
+  let active = street, px = 0, py = 0, cheerT = 0, shakeT = 0, tm = 0;
+  addEventListener('pointermove', e=>{ px = (e.clientX/innerWidth-.5)*2; py = (e.clientY/innerHeight-.5)*2; });
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  let onShopClick = null;
+  cv.addEventListener('pointerdown', e=>{
+    if(active!==street || !arrived || !onShopClick) return;
+    ndc.set(e.clientX/innerWidth*2-1, -(e.clientY/innerHeight)*2+1); ray.setFromCamera(ndc, camera);
+    if(ray.intersectObject(drinkShop, true).length) onShopClick();
+  });
+  function resize(){
+    renderer.setSize(innerWidth, innerHeight, false);
+    camera.aspect = innerWidth/innerHeight; camera.fov = camera.aspect<1 ? 75 : 55; camera.updateProjectionMatrix();
+  }
+  addEventListener('resize', resize); resize();
+
+  function animPerson(p, t, moving){
+    const u = p.userData, s = moving ? Math.sin(t*9)*.6 : 0;
+    u.legs[0].rotation.x = s; u.legs[1].rotation.x = -s; u.arms[0].rotation.x = -s*.8; u.arms[1].rotation.x = s*.8;
+  }
+  const clock = new THREE.Clock();
+  function loop(){
+    const dt = Math.min(clock.getDelta(), .05); tm += dt;
+    if(active===street){
+      if(walking){
+        pair.position.x += dt*3.4;
+        if(pair.position.x >= WALK.to){ pair.position.x = WALK.to; walking = false; arrived = true; arrow.visible = true; onArrive && onArrive(); }
+      }
+      const tgtRot = arrived ? Math.PI : Math.PI/2;
+      pair.rotation.y += (tgtRot - pair.rotation.y)*Math.min(1,dt*4);
+      [boy,girl].forEach((p,i)=>{ animPerson(p, tm+i*.5, walking); p.position.y = walking ? Math.abs(Math.sin(tm*9+i))*.06 : (arrived ? Math.abs(Math.sin(tm*4+i))*.08 : 0); });
+      const x = pair.position.x;
+      const cp = arrived ? new THREE.Vector3(8.2,3.6,8) : new THREE.Vector3(x-3,3.4,9);
+      const cl = arrived ? new THREE.Vector3(5.2,2.8,-4) : new THREE.Vector3(x+2.5,1.7,-3);
+      sCamPos.lerp(cp, Math.min(1,dt*2.5)); sCamLook.lerp(cl, Math.min(1,dt*2.5));
+      camera.position.copy(sCamPos); camera.lookAt(sCamLook);
+      if(arrow.visible){ arrow.position.y = 3.3+Math.sin(tm*4)*.25; arrow.rotation.y += dt*2; doorLight.intensity = 1.2+Math.sin(tm*5)*.5; }
+      clouds.forEach((c,i)=>{ c.position.x += dt*(.3+i*.05); if(c.position.x>55) c.position.x = -55; });
+    } else {
+      cheerT = Math.max(0,cheerT-dt); shakeT = Math.max(0,shakeT-dt);
+      const jump = cheerT>0 ? Math.abs(Math.sin(cheerT*9))*.3 : 0;
+      cust.position.y = Math.sin(tm*2.2)*.03 + jump;
+      cust.rotation.y = shakeT>0 ? Math.sin(shakeT*35)*.35 : Math.sin(tm*.7)*.08;
+      cust.position.x = angerV>=60 ? Math.sin(tm*30)*.02 : 0;
+      const u = cust.userData;
+      u.arms[0].rotation.z = -(cheerT>0 ? Math.abs(Math.sin(cheerT*9))*2.2 : 0);
+      u.arms[1].rotation.z =  (cheerT>0 ? Math.abs(Math.sin(cheerT*9))*2.2 : 0);
+      camera.position.set(px*.3, 1.9 - py*.12 + Math.sin(tm*.8)*.015, 1.7);
+      camera.lookAt(px*.9, 1.45 - py*.35, -3);
+      strawG.position.y += (strawTargetY - strawG.position.y)*Math.min(1,dt*5);
+      medal.rotation.y += dt*1.6; medal.position.y = TOP+.75+Math.sin(tm*2)*.05; globe.rotation.y += dt*.8;
+      for(let i=conf.length-1;i>=0;i--){
+        const c = conf[i], d = c.userData;
+        c.position.y -= d.v*dt; c.position.x += Math.sin(tm*2+d.sw)*dt*.3; c.rotation.x += d.rx*dt; c.rotation.y += d.ry*dt;
+        if(c.position.y<0){ shop.remove(c); c.geometry.dispose(); c.material.dispose(); conf.splice(i,1); }
+      }
+    }
+    renderer.render(active, camera);
+    requestAnimationFrame(loop);
+  }
+  loop();
+
+  const BOARDS = { map:['🧋 永續飲料店','歡迎小店員！'], L1:['關卡一 收銀台','價目表大破解'], L2:['關卡二 吸管救援','量一量・接一接'],
+    L3:['關卡三 彩虹奶昔','哪一瓶比較大？'], boss:['🌏 永續頒獎典禮','減塑小店長'] };
+  return {
+    startWalk(cb){ onArrive = cb; walking = true; },
+    skipWalk(){ pair.position.x = WALK.to - .01; },
+    onShop(cb){ onShopClick = cb; },
+    toShop(){ active = shop; },
+    setLevel(k){ Object.entries(G).forEach(([n,g])=>g.visible = (n===k)); setBoard(...BOARDS[k]); },
+    setBoard, setCustomer, setAnger, setCoins, setStraw, pour, bottleReset, celebrate,
+    initBottles(){ makeBottle('T', -.55, .13, .85, 7); makeBottle('F', .65, .21, .48, 8); },
+    cheer(){ cheerT = 1.2; }, shake(){ shakeT = .6; }
+  };
+})();
+
+/* 彩虹漸層（紅橘黃綠藍靛紫） */
+function rainbow(n){
+  const base = ['#ef4444','#f97316','#facc15','#22c55e','#3b82f6','#4f46e5','#a855f7'];
+  if(n===7) return base.slice();
+  const hx = h => [1,3,5].map(i=>parseInt(h.substr(i,2),16));
+  return Array.from({length:n},(_,i)=>{ const t = i*6/(n-1), lo = Math.floor(t), f = t-lo, a = hx(base[lo]), b = hx(base[Math.min(6,lo+1)]);
+    return '#'+a.map((v,j)=>Math.round(v+(b[j]-v)*f).toString(16).padStart(2,'0')).join(''); });
+}
+W.initBottles();
+
+/* =========================================================
+   4. 遊戲狀態
+========================================================= */
+const SPK = {
+  boss:{ emoji:'🧔', name:'老闆', shirt:0xffffff, hair:0x3b2a1a, boss:true },
+  mei:{ emoji:'👧', name:'第一位客人・小美', shirt:0xff8fab, hair:0x5a3825, girl:true },
+  yu:{ emoji:'🧒', name:'第二位客人・小宇', shirt:0xffd166, hair:0x2b1d12 },
+  aunt:{ emoji:'👩', name:'第三位客人・阿姨', shirt:0xc77dff, hair:0x6b3e26, girl:true },
+  me:{ emoji:'👦👧', name:'小店員' }
+};
+const game = { phase:'street', name:'', unlocked:1, done:{1:false,2:false,3:false}, stars:0, level:0, step:0,
+  busy:false, d:{}, check:null, onPad:null, undo:null, guideIdx:0, resume:0, rid:0, anger:0, justUnlocked:null, promises:[] };
+const panel = $('#panel');
+
+/* ---------- 答案格（數字鍵盤輸入） ---------- */
+function SL(id,o={}){ return `<span class="sl ${o.sm?'sl-sm':''} ${o.w?'sl-w':''}" data-slot="${id}" data-len="${o.len||1}" data-ph="${o.ph||''}" ${o.lock?'data-lock="1"':''}></span>`; }
+const slotEl = id => panel.querySelector(`[data-slot="${id}"]`);
+const getSlot = id => (slotEl(id)?.textContent || '').trim();
+function activate(el){ if(!el || el.dataset.lock || el.classList.contains('done')) return;
+  panel.querySelectorAll('.sl.act').forEach(s=>s.classList.remove('act')); el.classList.add('act'); }
+function unlockSlot(id){ const el = slotEl(id); if(!el) return; delete el.dataset.lock; activate(el); }
+function setDone(id,val){ const el = slotEl(id); if(!el) return; delete el.dataset.lock; el.textContent = val; el.classList.remove('act'); el.classList.add('done'); el.dataset.lock = '1'; }
+function clearSlot(id){ const el = slotEl(id); if(el) el.textContent = ''; }
+function padPress(k){
+  if(game.busy) return;
+  if(k==='ok') return submit();
+  if(k==='back') return undo();
+  let el = panel.querySelector('.sl.act');
+  if(!el){ el = panel.querySelector('.sl:not([data-lock]):not(.done)'); if(!el) return; activate(el); }
+  const len = +el.dataset.len; let t = el.textContent;
+  if(k==='del') t = t.slice(0,-1);
+  else if(t.length < len) t += k;
+  else if(len===1) t = k;
+  el.textContent = t; sfx('key');
+  if(k!=='del' && t.length>=len){ const all = [...panel.querySelectorAll('.sl:not([data-lock]):not(.done)')]; const nx = all[all.indexOf(el)+1]; if(nx) activate(nx); }
+  game.onPad && game.onPad();
+}
+function submit(){ if(game.busy) return; game.check && game.check(); }
+const PAD = `<div class="kp shrink-0 self-center lg:self-start"><div class="kp-t">🔢 數字九宮格</div><div class="grid grid-cols-3 gap-2">
+  ${[1,2,3,4,5,6,7,8,9].map(d=>`<button class="kb" data-k="${d}">${d}</button>`).join('')}
+  <button class="kb del" data-k="del"><span class="ic">⌫</span><span class="tx">刪除</span></button><button class="kb" data-k="0">0</button><button class="kb ok" data-k="ok">✔</button>
+  <button class="kb back" data-k="back"><span>↩️</span><span>退回上一步</span></button></div></div>`;
+const withPad = html => `<div class="flex flex-col lg:flex-row gap-4 items-start"><div class="flex-1 min-w-0 w-full">${html}</div>${PAD}</div>`;
+const okBtn = (txt) => `<div class="flex justify-center mt-3"><button class="btn-go" onclick="submit()">${txt || R('送出')+' ✔'}</button></div>`;
+function vf(rows){ return `<div class="vf">${rows.map(r=>r.c.map((x,i)=>`<div class="vc ${r.k} ${i===0?'opc':''}">${x}</div>`).join('')).join('')}</div>`; }
+const HD = {k:'hd', c:['', `<span class="colh t">${R('十位')}</span>`, `<span class="colh o">${R('個位')}</span>`]};
+
+/* ---------- 引導式步驟引擎（支援回到上一步） ---------- */
+function runGuide(phases, onFinish){
+  const rid = game.rid;
+  let i = Math.min(game.resume || 0, phases.length-1); game.resume = 0;
+  for(let k=0;k<i;k++){ const p = phases[k]; p.pre && p.pre();
+    if(p.slot){ setDone(p.slot, p.ans); p.after && p.after(); } else p.auto && p.auto(); }
+  game.guideIdx = i;
+  function start(){
+    if(rid!==game.rid) return;
+    const p = phases[i], tip = $('#tip');
+    p.pre && p.pre();
+    if(tip){ tip.innerHTML = p.tip; tip.classList.remove('pop'); void tip.offsetWidth; tip.classList.add('pop'); }
+    speak(p.tip);
+    if(p.slot){
+      unlockSlot(p.slot);
+      game.check = () => {
+        const v = getSlot(p.slot);
+        if(!v) return wrong('先用數字九宮格填入答案喔！');
+        if(v===p.ans){ setDone(p.slot, v); sfx('ok'); if(p.ok) praise(p.ok); p.after && p.after(); advance(); }
+        else { wrong(p.hint || '再想想看！'); clearSlot(p.slot); }
+      };
+    } else { game.check = null; p.setup(advance); }
+  }
+  function advance(){
+    if(rid!==game.rid) return;
+    i++; game.guideIdx = i; game.check = null;
+    if(i<phases.length) setTimeout(start, 650); else setTimeout(()=>{ if(rid===game.rid) onFinish(); }, 650);
+  }
+  start();
+}
+const demoP = (tip, act) => ({ tip, auto:act, setup(adv){ const b = $('#demoNext'); show(b); b.onclick = () => { hide(b); sfx('tap'); act(); adv(); }; } });
+function undo(){
+  if(game.busy || !game.level) return;
+  sfx('tap');
+  if(game.undo){ game.undo(); return; }
+  if(game.guideIdx>0){ game.resume = game.guideIdx-1; renderStep(); toast('↩️','回到上一步','info'); toastTimer = setTimeout(hideToast,900); return; }
+  if(game.step>0){ game.step--; renderStep(); toast('↩️','回到上一步','info'); toastTimer = setTimeout(hideToast,900); return; }
+  toast('↩️','已經是第一步了！','info'); toastTimer = setTimeout(hideToast,1200);
+}
+
+/* ---------- 回饋 ---------- */
+let toastTimer = null;
+function toast(icon, msg, kind){
+  const t = $('#toast'); clearTimeout(toastTimer);
+  const cls = { ok:'bg-green-50 border-green-400 text-green-700', no:'bg-orange-50 border-orange-400 text-orange-700', info:'bg-amber-50 border-amber-400 text-amber-700' }[kind];
+  t.className = `show fixed z-[70] left-1/2 top-[38%] px-7 py-4 rounded-[2rem] border-[5px] shadow-2xl text-2xl md:text-3xl font-black text-center max-w-[92vw] leading-[2.6rem] md:leading-[2.9rem] ${cls}`;
+  t.innerHTML = `<div class="text-5xl mb-1">${icon}</div>${msg}`;
+}
+function hideToast(){ $('#toast').classList.replace('show','hide'); }
+function updateHUD(){ $('#stars').textContent = game.stars; }
+function praise(msg, star){
+  if(star){ game.stars++; updateHUD(); }
+  sfx('ok'); toast('👍', msg, 'ok'); speak(msg);
+  toastTimer = setTimeout(hideToast, 1400);
+}
+function correct(msg, o={}){
+  if(game.busy) return; game.busy = true;
+  if(!o.noStar){ game.stars++; updateHUD(); }
+  sfx(o.noStar?'tap':'ok'); W.cheer();
+  toast(o.noStar ? '💡' : '🎉', msg || '答對了！', 'ok'); speak(msg);
+  setTimeout(()=>{ hideToast(); game.busy = false; (o.then || next)(); }, o.delay || 1900);
+}
+function wrong(hint){
+  if(game.busy) return;
+  sfx('no'); W.shake(); toast('🤔', hint, 'no'); speak(hint, true);
+  panel.classList.remove('shake'); void panel.offsetWidth; panel.classList.add('shake');
+  toastTimer = setTimeout(hideToast, 2600);
+}
+function setAnger(v){
+  game.anger = v; $('#angerFill').style.width = v+'%'; $('#angerNum').textContent = v;
+  $('#angerFace').textContent = v===0 ? '😄' : v<40 ? '😐' : v<70 ? '😠' : '😡';
+  W.setAnger(v);
+}
+function confettiDOM(n=150){
+  const cols = ['#ff6b6b','#ffd166','#06d6a0','#4cc9f0','#9b5de5','#f15bb5','#facc15'];
+  for(let i=0;i<n;i++){
+    const d = document.createElement('div'); d.className = 'cf';
+    d.style.left = Math.random()*100+'vw'; d.style.background = cols[i%cols.length];
+    d.style.animationDuration = (2.4+Math.random()*2.6)+'s'; d.style.animationDelay = (Math.random()*1.2)+'s';
+    d.style.borderRadius = Math.random()<.4 ? '50%' : '3px'; d.style.width = (8+Math.random()*8)+'px';
+    document.body.appendChild(d); setTimeout(()=>d.remove(), 6500);
+  }
+}
+
+/* ---------- 共用畫面元件 ---------- */
+const menuHTML = solved => `<div class="menu"><div class="menu-h">📋 ${R('價目表')}</div>
+  <div class="mrow"><span>🍓 ${R('草莓牛奶')}</span><span class="pr">${solved?'5':'<span class="stain"></span>'}7 元</span></div>
+  <div class="mrow"><span>🧇 ${R('鬆餅')}</span><span class="pr">3${solved?'9':'<span class="stain"></span>'} 元</span></div></div>`;
+const coinMini = list => list.map(v=>`<span class="coin mc c${v}">${v}</span>`).join('');
+const CM = 8; // 吸管實測：1 公分 = 8px
+function cupSimHTML(id){
+  const H = 27*CM; let pearls = '';
+  for(let i=0;i<9;i++) pearls += `<span class="pearl" style="left:${10+(i%5)*18}px;bottom:${4+Math.floor(i/5)*12}px"></span>`;
+  return `<div class="cupsim" id="${id}"><div class="cup2" style="height:${H}px"><div class="tea"></div>${pearls}</div>
+    <div class="rim" style="bottom:${H}px"></div><div class="rimtag" style="bottom:${H+2}px">杯口</div>
+    <div class="straw2" style="bottom:420px"></div></div>`;
+}
+function cupDrop(id, segs, cb){
+  const st = $('#'+id+' .straw2'), H = 27*CM;
+  st.innerHTML = segs.slice().reverse().map(s=>`<div style="height:${s.cm*CM}px;background:${s.c}"></div>`).join('');
+  st.style.transition = 'none'; st.style.bottom = '420px'; void st.offsetWidth;
+  st.style.transition = 'bottom .45s ease-out'; st.style.bottom = (H+14)+'px';   // 先移到杯口正上方
+  sfx('tap');
+  setTimeout(()=>{ st.style.transition = 'bottom 1s cubic-bezier(.55,0,.8,1.2)'; st.style.bottom = '5px'; }, 750); // 垂直插入
+  setTimeout(cb, 1900);
+}
+const STRAW = { Y:{n:'黃色',cm:5,c:'#facc15'}, R:{n:'紅色',cm:7,c:'#ef4444'}, G:{n:'綠色',cm:9,c:'#22c55e'}, Bl:{n:'藍色',cm:14,c:'#3b82f6'} };
+const segBar = (segs, u=18, full=true) => `<div class="flex rounded-full overflow-hidden border-4 border-white shadow w-fit">${segs.map(s=>
+  `<div class="seg" style="width:${s.cm*u}px;background:${s.c}">${full ? s.n+s.cm+'公分' : s.cm}</div>`).join('')}</div>`;
+function rulerHTML(){
+  const U = 40, P = 24; let t = '';
+  for(let i=0;i<=15;i++){ t += `<div class="tick major" style="left:${P+i*U}px"></div><div class="tnum" style="left:${P+i*U}px">${i}</div>`;
+    if(i<15) t += `<div class="tick minor" style="left:${P+(i+.5)*U}px"></div>`; }
+  return `<div class="ruler-scroll"><div class="ruler-wrap" style="width:${P*2+15*U}px"><div class="zero-line" style="left:${P-2}px"></div>
+    <div id="straw" class="straw" style="width:${5*U}px;left:${P+2*U}px"></div><div class="ruler">${t}</div></div></div>`;
+}
+function bottleHTML(k, n, cls){
+  const H = cls==='tall' ? 210 : 114, cols = rainbow(n);
+  return `<div class="bwrap" id="bw${k}"><div class="neck ${cls}"></div><div class="bottle ${cls}" id="bt${k}">
+    ${cols.map(c=>`<div class="layer" style="height:${H/n}px;background:${c}"></div>`).join('')}</div></div>`;
+}
+let gid = 0;
+function bottleIcon(t, h=60){
+  const id = 'bg'+(gid++), tall = t==='T', w = Math.round(tall ? h*.43 : h*.95);
+  const vb = tall ? '0 0 30 70' : '0 0 66 70';
+  const neck = tall ? '<rect x="10" y="2" width="10" height="11" rx="2"' : '<rect x="23" y="24" width="20" height="11" rx="3"';
+  const body = tall ? '<rect x="3" y="12" width="24" height="56" rx="6"' : '<rect x="3" y="34" width="60" height="34" rx="10"';
+  return `<svg width="${w}" height="${h}" viewBox="${vb}" class="inline-block align-middle shrink-0"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ef4444"/><stop offset=".33" stop-color="#facc15"/><stop offset=".66" stop-color="#22c55e"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs>
+    ${neck} fill="#e0f2fe" stroke="#64748b" stroke-width="2.5"/>${body} fill="url(#${id})" stroke="#64748b" stroke-width="2.5"/></svg>`;
+}
+
+/* =========================================================
+   5. 關卡內容
+========================================================= */
+function attempt(cfg){
+  const segs = cfg.segs, [a,b,c] = segs.map(s=>s.cm), s1 = a+b, tot = s1+c, ans = tot>27 ? '>' : '<';
+  const nm = segs.map(s=>`${s.n} ${s.cm} ${R('公分')}`).join(' ＋ ');
+  return {
+    part:'Part 2 吸管拼接', who:'yu', anger:true,
+    say:()=>cfg.say,
+    body:()=>{
+      const inner = `<div class="flex flex-wrap items-center gap-2 mb-2"><span class="text-xl font-black rounded-full px-4 py-1 text-white ${cfg.demo?'bg-purple-500':'bg-sky-500'}">${cfg.badge}</span>
+          <span class="text-xl font-black">${cfg.title}：${nm}</span></div>
+        <div class="flex flex-wrap gap-4 items-start">
+          <div class="flex-1 min-w-[300px]">
+            <div class="overflow-x-auto pb-1">${segBar(segs)}</div>
+            <div class="eqline">① ${a} ＋ ${b} ＝ ${SL('e1',{len:2,lock:1,w:1})} ${R('公分')}</div>
+            <div class="eqline">② <span id="e1c" class="text-blue-600">？</span> ＋ ${c} ＝ ${SL('e2',{len:2,lock:1,w:1})} ${R('公分')}</div>
+            <div class="eqline">③ <span id="e2c" class="text-blue-600">？</span> <span id="cmpSlot" class="cslot">?</span> 27
+              <span id="cmpBtns" class="flex gap-2 ml-2 opacity-40 pointer-events-none">${['>','<','='].map(s=>`<button class="btn-ch !w-14 !h-14 !text-3xl" data-s="${s}">${s}</button>`).join('')}</span></div>
+            <div id="tip" class="tip mt-2"></div>
+            <div class="flex flex-wrap gap-3 mt-3">
+              <button id="demoNext" class="btn-alt hidden">👩‍🏫 老師下一步 ▶</button>
+              <button id="testBtn" class="btn-go hidden">🧪 ${R('實測')}：垂直插入</button>
+              <button id="nextAtt" class="btn-go hidden">換下一組試試 ▶</button></div>
+          </div>
+          <div class="w-[200px] mx-auto">${cupSimHTML('cs')}<div id="result"></div></div>
+        </div>`;
+      return cfg.demo ? inner : withPad(inner);
+    },
+    bind(){
+      setAnger(cfg.prev);
+      const doCmp = s => { $('#cmpSlot').textContent = s==='>' ? '＞' : s==='<' ? '＜' : '＝'; };
+      const test = { tip:`④ 用${R('實測')}驗證！按「🧪 ${R('實測')}」，把接好的吸管從杯口上方垂直插進去。`, setup(adv){
+        const t = $('#testBtn'); show(t); t.onclick = () => { hide(t); W.setStraw(segs); cupDrop('cs', segs, adv); }; } };
+      const phases = cfg.demo ? [
+        demoP(`👩‍🏫 老師${R('示範')}第一步：先算黃色 ${a} ${R('公分')} ＋ 紅色 ${b} ${R('公分')}…`, ()=>{ setDone('e1',String(s1)); $('#e1c').textContent = s1; }),
+        demoP(`👩‍🏫 第二步：再把 ${s1} ＋ 綠色 ${c} ${R('公分')}…`, ()=>{ setDone('e2',String(tot)); $('#e2c').textContent = tot; }),
+        demoP(`👩‍🏫 最後，${tot} 和 27 ${R('比較')}，哪個大？`, ()=>doCmp(ans)),
+        test
+      ] : [
+        { slot:'e1', ans:String(s1), tip:`① 先算 ${a} ＋ ${b} ＝ ？`, hint:`從 ${a} 往上數 ${b} 個看看！`, after:()=>$('#e1c').textContent = s1 },
+        { slot:'e2', ans:String(tot), tip:`② 再算 ${s1} ＋ ${c} ＝ ？`, hint:`先加${R('個位')}，再加${R('十位')}，記得${R('進位')}！`, after:()=>$('#e2c').textContent = tot },
+        { tip:`③ ${tot} 和 27 ${R('比較')}，點選正確的符號！`, auto:()=>doCmp(ans), setup(adv){
+            const box = $('#cmpBtns'); box.classList.remove('opacity-40','pointer-events-none');
+            box.querySelectorAll('button').forEach(bt=>bt.onclick=()=>{
+              if(bt.dataset.s===ans){ doCmp(ans); box.classList.add('opacity-40','pointer-events-none'); praise(`${tot} ${ans==='>'?'＞':'＜'} 27`, true); adv(); }
+              else wrong(`${tot} 和 27 的${R('十位')}一樣，比比看${R('個位')}！`);
+            }); } },
+        test
+      ];
+      runGuide(phases, ()=>{
+        if(tot>27){
+          setAnger(20); W.cheer();
+          $('#result').innerHTML = `<div class="res good">🎉 吸管露出杯口了！</div>`;
+          $('#sayBox').innerHTML = '哇！吸管露出杯口，喝得到珍珠了！';
+          correct(`${tot} ＞ 27！吸管露出杯口，出餐成功！`, {delay:2600});
+        } else {
+          setAnger(cfg.anger); W.shake(); sfx('no');
+          $('#result').innerHTML = `<div class="res bad">💦 沉底了！${tot} ＜ 27</div>`;
+          $('#sayBox').innerHTML = cfg.angry; speak(cfg.angry, true);
+          $('#tip').innerHTML = `${tot} ${R('公分')}比 27 ${R('公分')}短，吸管沉到杯底了！換一種吸管組合吧！`;
+          const nb = $('#nextAtt'); show(nb); nb.onclick = () => { sfx('tap'); next(); };
+        }
+      });
+    }
+  };
+}
+
+const LEVELS = {
+  /* ======================= 關卡一（第一位客人：小美） ======================= */
+  1: [
+    { part:'Part 1 價目表缺空', who:'mei',
+      say:()=>`你好！我想買${R('草莓牛奶')}和${R('鬆餅')}！咦？${R('價目表')}被污漬遮住了，看不到價錢…`,
+      body:()=>`${menuHTML(false)}
+        <div id="clue" class="hidden"><div class="receipt">🧾 ${R('線索')}：上一位客人買了 🍓${R('草莓牛奶')} ＋ 🧇${R('鬆餅')}，一共花了 <b class="text-red-500 text-3xl">96 元</b>！</div>
+          <div class="eq"><span class="text-blue-600">△</span>7 ＋ 3<span class="text-orange-500">□</span> ＝ 96</div></div>
+        <div class="flex justify-center gap-3 mt-4"><button id="clueBtn" class="btn-alt">🔍 找${R('線索')}</button>
+          <button id="goV" class="btn-go hidden">✏️ 用${R('直式')}${R('破解')}</button></div>`,
+      bind(){
+        $('#clueBtn').onclick = () => { sfx('tap'); show($('#clue')); hide($('#clueBtn')); show($('#goV')); speak('上一位客人買草莓牛奶和鬆餅，一共花了96元！'); };
+        $('#goV').onclick = () => correct('找到線索了！一起用直式破解吧！', {noStar:true, delay:1400});
+      }
+    },
+    { part:'Part 1 價目表缺空', who:'mei',
+      say:()=>`草莓牛奶是 △7 元，鬆餅是 3□ 元，加起來是 96 元。△ 和 □ 是多少呢？`,
+      body:()=>withPad(`<div class="eq mb-2"><span id="hx1" class="text-blue-600">△</span>7 ＋ 3<span id="hx2" class="text-orange-500">□</span> ＝ 96</div>
+        <div class="flex flex-wrap items-start justify-center gap-5">
+          ${vf([HD, {k:'cr',c:['', SL('carry',{sm:1,lock:1}), '']}, {k:'',c:['', SL('tri',{lock:1,ph:'△'}), '7']},
+               {k:'',c:['＋','3', SL('sq',{lock:1,ph:'□'})]}, {k:'ln',c:['','9','6']}])}
+          <div class="flex-1 min-w-[230px]"><div id="tip" class="tip"></div><div class="text-lg font-bold text-amber-700 mt-2">💡 小空格是「${R('進位')}」用的喔！</div></div>
+        </div>${okBtn()}`),
+      bind(){
+        runGuide([
+          { slot:'sq', ans:'9', tip:`① 先看${R('個位')}：7 ＋ □ ＝ 16（${R('個位')}要是 6）。□ 是多少？`, hint:'7 再加幾會等於 16？從 7 往上數到 16！', ok:'7 ＋ 9 ＝ 16！', after:()=>$('#hx2').textContent='9' },
+          { slot:'carry', ans:'1', tip:`② 16 是 1 個十和 6 個一。${R('個位')}寫 6，要${R('進位')}幾到${R('十位')}的小空格？`, hint:'16 裡面有幾個十呢？', ok:'進位 1！' },
+          { slot:'tri', ans:'5', tip:`③ ${R('十位')}：1 ＋ △ ＋ 3 ＝ 9，△ 是多少？`, hint:'1 加 3 是 4，4 再加幾會是 9？', after:()=>$('#hx1').textContent='5' }
+        ], ()=>{ W.setBoard('價目表破解！','草莓牛奶57元・鬆餅39元'); correct(`${R('破解')}成功！${R('草莓牛奶')} 57 元、${R('鬆餅')} 39 元！`, {delay:2300}); });
+      }
+    },
+    { part:'Part 2 找零與驗算', who:'mei',
+      say:()=>`我用 96 元跟你買一杯 57 元的${R('草莓牛奶')}，請問你要${R('找')}我多少錢呢？請你先列出${R('橫式')}！`,
+      body:()=>{
+        const CARDS = ['57','＋','96','＝','39','−','100'];
+        return `${menuHTML(true)}
+          <div class="q text-center mt-3">👆 點選下面的卡片，依序拼出${R('找錢')}的${R('橫式')}：（點格子可以拿回卡片）</div>
+          <div class="flex flex-wrap justify-center items-center gap-2 my-3">${[0,1,2,3].map(i=>`<span class="fslot" data-f="${i}"></span>`).join('')}
+            <span class="text-4xl font-black text-gray-300">？</span></div>
+          <div class="flex flex-wrap justify-center gap-3">${CARDS.map((c,i)=>`<button class="frm-card" data-c="${i}">${c}</button>`).join('')}</div>
+          <div class="flex flex-wrap justify-center gap-3 mt-4"><button class="btn-alt" id="fClear">🧹 全部拿回</button><button class="btn-go" onclick="submit()">檢查算式 ✔</button></div>`;
+      },
+      bind(){
+        const CARDS = ['57','＋','96','＝','39','−','100'];
+        let placed = [];
+        const draw = () => {
+          $$('.fslot').forEach((s,i)=>{ s.textContent = placed[i]!==undefined ? CARDS[placed[i]] : ''; s.classList.toggle('filled', placed[i]!==undefined); s.classList.toggle('next', i===placed.length); });
+          $$('[data-c]').forEach(b=>b.classList.toggle('used', placed.includes(+b.dataset.c)));
+        };
+        $$('[data-c]').forEach(b=>b.onclick=()=>{ if(placed.length>=4) return wrong('格子已經放滿了！'); placed.push(+b.dataset.c); sfx('key'); draw(); });
+        $$('.fslot').forEach((s,i)=>s.onclick=()=>{ if(placed[i]===undefined) return; placed.splice(i,1); sfx('tap'); draw(); });
+        $('#fClear').onclick = () => { placed = []; sfx('tap'); draw(); };
+        game.undo = () => { if(placed.length){ placed.pop(); draw(); } else { game.step--; renderStep(); } };
+        game.check = () => {
+          const e = placed.map(i=>CARDS[i]);
+          if(e.length<4) return wrong('要放滿 4 張卡片喔！');
+          if(e.join(' ')==='96 − 57 ＝') return correct(`列出${R('橫式')}：96 − 57 ＝ ？`);
+          if(e[0]!=='96') wrong('先放客人付的錢：96 元');
+          else if(e[1]!=='−') wrong('付的錢扣掉飲料錢，要用減法「−」喔！');
+          else if(e[2]!=='57') wrong('要減掉草莓牛奶的價錢 57 元');
+          else wrong('最後放上等號「＝」');
+        };
+        draw();
+      }
+    },
+    { part:'Part 2 找零與驗算', who:'mei',
+      say:()=>`對！就是 96 − 57。請用${R('直式')}算算看要找多少錢？`,
+      body:()=>withPad(`<div class="eq my-2">96 − 57 ＝ ${SL('h',{len:2,lock:1,w:1})} <span id="noteFirst" class="note">先不寫</span></div>
+        <div class="flex flex-wrap items-start justify-center gap-5">
+          ${vf([HD, {k:'cr',c:['', `<span id="b8" class="tiny opacity-0">8</span>`, `<span id="b10" class="tiny opacity-0">10</span>`]},
+               {k:'',c:['', `<span id="b9" class="bdig">9</span>`, '6']},
+               {k:'',c:['−','5','7']}, {k:'ln',c:['', SL('t',{lock:1}), SL('o',{lock:1})]}])}
+          <div class="flex-1 min-w-[230px]"><div id="tip" class="tip"></div></div>
+        </div>${okBtn()}`),
+      bind(){
+        const borrow = () => { const b9 = $('#b9'); b9.onclick = null; b9.classList.remove('pulse'); b9.classList.add('struck');
+          $('#b8').classList.remove('opacity-0'); $('#b10').classList.remove('opacity-0'); };
+        runGuide([
+          { tip:`① ${R('個位')} 6 − 7 不夠減！👆 點一下${R('十位')}的 9，把它劃掉寫上 8，向${R('十位')}借 1 個 10。`, auto:borrow, setup(adv){
+              const b9 = $('#b9'); b9.classList.add('pulse');
+              b9.onclick = () => { borrow(); praise('9 劃掉寫上 8，借來 1 個 10！'); adv(); };
+            } },
+          { slot:'o', ans:'9', tip:`② ${R('個位')}數字 6 和 7 差 1，所以請在${R('直式')}${R('個位')}的地方寫下 9！`, hint:'6 和 7 差 1，借來的 10 少 1 是多少？' },
+          { slot:'t', ans:'3', tip:`③ ${R('十位')}：9 借走 1 剩下 8，8 − 5 ＝ ？`, hint:'9 已經變成 8 了喔！8 − 5 ＝ ？' },
+          { slot:'h', ans:'39', pre:()=>{ const n = $('#noteFirst'); if(n) n.remove(); }, tip:`④ ${R('直式')}算好了！把結果 39 填回${R('橫式')}後面。`, hint:'直式下面的答案是多少？' }
+        ], ()=>correct('96 − 57 ＝ 39！'));
+      }
+    },
+    { part:'Part 2 找零與驗算', who:'mei',
+      say:()=>`你確定是要${R('找')}我 39 元嗎？請你${R('驗算')}給我看！`,
+      body:()=>withPad(`<div class="flex flex-wrap items-center justify-center gap-3 bg-amber-50 border-4 border-amber-200 rounded-2xl p-2">
+          <span class="text-lg font-black text-amber-700">📌 原本的${R('橫式')}</span>
+          <div class="eq">96 − 57 ＝ <span class="sl done">39</span></div></div>
+        <div class="tip !bg-yellow-50 !border-yellow-300 mt-2 text-lg">💡 ${R('驗算')} 39 ＋ 57 ＝ 96 是為了確認${R('找錢')}金額沒算錯，原本${R('橫式')} 96 − 57 要填寫的${R('找錢')}答案是 39 元喔！</div>
+        <div class="flex flex-wrap items-start justify-center gap-5 mt-2">
+          ${vf([HD, {k:'cr',c:['', SL('vc',{sm:1,lock:1}), '']}, {k:'',c:['','3','9']}, {k:'',c:['＋','5','7']}, {k:'ln',c:['', SL('vt',{lock:1}), SL('vo',{lock:1})]}])}
+          <div class="flex-1 min-w-[230px]"><div id="tip" class="tip"></div>
+            <div class="eqline mt-3 justify-center">答：${SL('ans',{len:2,lock:1,w:1})} 元</div></div>
+        </div>${okBtn()}`),
+      bind(){
+        runGuide([
+          { slot:'vo', ans:'6', tip:`① ${R('個位')}：9 ＋ 7 ＝ 16，${R('個位')}寫多少？`, hint:'16 的個位是幾？' },
+          { slot:'vc', ans:'1', tip:`② 16 要${R('進位')}幾到${R('十位')}的小空格？`, hint:'16 有 1 個十喔！' },
+          { slot:'vt', ans:'9', tip:`③ ${R('十位')}：1 ＋ 3 ＋ 5 ＝ ？`, hint:'別忘了進位的 1！', ok:'39 ＋ 57 ＝ 96，和付的錢一樣！' },
+          { slot:'ans', ans:'39', tip:`④ ${R('驗算')}成功！寫出答句：答：□ 元`, hint:'要找多少錢呢？看看上面的橫式！' }
+        ], ()=>correct(`${R('驗算')}正確！${R('找錢')} 39 元給小美！`, {delay:2200}));
+      }
+    },
+    { part:'Part 3 多元硬幣湊數', who:'mei',
+      say:()=>`我怕兩樣都點會喝不完、吃不完，浪費食物…今天先買 57 元的${R('草莓牛奶')}就好！我想改用零錢付剛剛好 57 元，不一定要用最少的${R('硬幣')}，你幫我${R('湊')}湊看！`,
+      body:()=>`<div class="tip mb-3">💡 提示：付法有很多種，<b>不限最少硬幣</b>！點${R('硬幣')}放進${R('托盤')}，點${R('托盤')}裡的${R('硬幣')}可以拿回來。</div>
+        <div class="flex flex-wrap gap-4 justify-center items-center mb-3">${[50,10,5,1].map(x=>`<button class="coin c${x}" data-coin="${x}">${x}</button>`).join('')}</div>
+        <div class="tray" id="tray"></div>
+        <div class="flex flex-wrap items-center justify-between gap-3 mt-3">
+          <div class="text-3xl font-black">${R('托盤')}：<span id="sum" class="text-blue-600">0</span> 元 ／ 57 元</div>
+          <div class="flex flex-wrap gap-2"><button id="clrBtn" class="btn-alt">🧹 清空</button><button class="btn-go" onclick="submit()">放上${R('展示牆')} ✔</button></div></div>
+        <div class="mt-3 flex flex-wrap items-center justify-between gap-3"><div class="text-xl font-black">🖼️ 已${R('湊')}出：<span id="wcount">0</span> 種</div>
+          <button id="wallBtn" class="btn-card hidden">看${R('湊')}法${R('展示牆')} ▶</button></div>`,
+      bind(){
+        game.d.coins = []; game.d.combos = game.d.combos || [];
+        const sum = () => game.d.coins.reduce((a,b)=>a+b,0);
+        const draw = () => {
+          $('#tray').innerHTML = game.d.coins.length ? game.d.coins.map((x,i)=>`<button class="coin c${x} sm" data-i="${i}">${x}</button>`).join('')
+            : '<span class="text-amber-500 text-xl font-bold">托盤是空的</span>';
+          $('#sum').textContent = sum(); $('#wcount').textContent = game.d.combos.length;
+          $$('#tray [data-i]').forEach(b=>b.onclick=()=>{ game.d.coins.splice(+b.dataset.i,1); sfx('tap'); draw(); });
+          if(game.d.combos.length) show($('#wallBtn'));
+          W.setCoins(game.d.coins);
+        };
+        $$('[data-coin]').forEach(b=>b.onclick=()=>{ if(game.d.coins.length>=20) return wrong('托盤放不下了！'); game.d.coins.push(+b.dataset.coin); sfx('coin'); draw(); });
+        $('#clrBtn').onclick = () => { game.d.coins = []; sfx('tap'); draw(); };
+        $('#wallBtn').onclick = () => correct('來看看大家的湊法展示牆！', {noStar:true, delay:1200});
+        game.undo = () => {
+          if(game.d.coins.length){ game.d.coins.pop(); draw(); }
+          else if(game.d.combos.length){ game.d.combos.pop(); draw(); toast('↩️','拿回上一種湊法','info'); toastTimer = setTimeout(hideToast,900); }
+          else { game.step--; renderStep(); }
+        };
+        game.check = () => {
+          const s = sum();
+          if(s===57){
+            const key = game.d.coins.slice().sort((a,b)=>b-a).join('+');
+            if(game.d.combos.some(c=>c.join('+')===key)) return wrong('這種湊法已經放上去了，換一種試試！');
+            game.d.combos.push(game.d.coins.slice().sort((a,b)=>b-a)); game.d.coins = []; draw();
+            praise('湊出 57 元！放上展示牆 🖼️', true);
+          } else if(s>57) wrong(`${s} 元太多了，拿掉一些${R('硬幣')}吧！`);
+          else wrong(`${s} 元還不夠，還差 ${57-s} 元！`);
+        };
+        draw();
+      }
+    },
+    { part:'Part 3 多元硬幣湊數', who:'mei',
+      say:()=>`哇！原來 57 元有這麼多種付法呀！`,
+      body:()=>{
+        const OTHERS = [[50,5,1,1],[10,10,10,10,10,5,1,1],[50,1,1,1,1,1,1,1],[10,10,10,10,5,5,5,1,1],[10,10,10,5,5,5,5,5,1,1]];
+        const mine = (game.d.combos||[]).map(c=>c.join('+'));
+        const others = OTHERS.filter(c=>!mine.includes(c.join('+')));
+        const card = (c, isMine) => `<div class="wcard ${isMine?'mine':''}" data-n="${c.length}"><div class="text-sm font-black mb-1">${isMine?'⭐ 你的湊法':'👫 同學的湊法'}</div>
+          <div class="flex flex-wrap justify-center items-center">${coinMini(c)}</div><div class="font-black mt-1">共 ${c.length} 枚</div></div>`;
+        return withPad(`<div class="text-2xl font-black text-center mb-2">🖼️ ${R('湊')}法${R('展示牆')}：都是 57 元！</div>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">${(game.d.combos||[]).map(c=>card(c,true)).join('')}${others.map(c=>card(c,false)).join('')}</div>
+          <div class="eqline justify-center mt-4">最少要用 ${SL('min',{len:2,w:1})} 枚${R('硬幣')}就能付 57 元</div>${okBtn()}`);
+      },
+      bind(){
+        game.check = () => {
+          const v = getSlot('min');
+          if(v==='4'){
+            $$('.wcard').forEach(c=>{ if(c.dataset.n==='4') c.classList.add('best'); });
+            correct(`這些都是 57 元！用最少的${R('硬幣')}（50＋5＋1＋1，4 枚）付錢最方便！`, {delay:3200, then:()=>completeLevel(1)});
+          } else { wrong('找找看展示牆上，哪一種的「共幾枚」最少？'); clearSlot('min'); }
+        };
+      }
+    }
+  ],
+
+  /* ======================= 關卡二（第二位客人：小宇） ======================= */
+  2: [
+    { part:'Part 1 點餐與直尺測量', who:'yu',
+      say:()=>`老闆好！我要一杯${R('珍珠奶茶')}！`,
+      body:()=>`<div class="flex flex-wrap items-center justify-center gap-6">
+          <div class="w-[200px]">${cupSimHTML('cs')}</div>
+          <div class="flex-1 min-w-[260px] text-center"><div id="crisis" class="q mb-4">把黃色${R('吸管')}從杯口上方垂直插進${R('珍珠奶茶')}，出餐囉！</div>
+            <button id="serve" class="btn-go">🧋 出餐！</button><button id="goMeasure" class="btn-alt hidden">📏 用${R('直尺')}量量看</button></div></div>`,
+      bind(){
+        $('#serve').onclick = () => { hide($('#serve')); W.setStraw([STRAW.Y]);
+          cupDrop('cs', [STRAW.Y], ()=>{ sfx('no'); W.shake(); setAnger(35);
+            $('#crisis').innerHTML = `<span class="text-red-500 text-2xl">😱 糟糕！黃${R('吸管')}太短，整根沉到杯底了！</span>`;
+            $('#sayBox').innerHTML = '吸管沉到底了！我怎麼喝啦！😠';
+            speak('糟糕！黃吸管太短，整根沉到杯底了！', true); show($('#goMeasure')); }); };
+        $('#goMeasure').onclick = () => correct('先量量看黃吸管有多長！', {noStar:true, delay:1300});
+      }
+    },
+    { part:'Part 1 點餐與直尺測量', who:'me',
+      say:()=>`我的黃色${R('吸管')}有多長？請用${R('直尺')}幫我${R('測量')}！先把${R('吸管')}左端${R('對齊')} 0，再讀出${R('長度')}喔！`,
+      body:()=>withPad(`<div class="q text-center">移動黃${R('吸管')}，讓左端${R('對齊')}${R('刻度')} <b class="text-red-500">0</b>。</div>
+        ${rulerHTML()}
+        <div class="flex flex-wrap items-center justify-center gap-3 my-2">
+          <button id="mvL" class="btn-alt">◀ 往左</button><button id="mvR" class="btn-alt">往右 ▶</button>
+          <span id="alignTip" class="text-xl font-black px-3 py-1 rounded-full"></span></div>
+        <div class="eqline justify-center">黃${R('吸管')}長 ${SL('len',{len:2,w:1})} ${R('公分')}</div>${okBtn()}`),
+      bind(){
+        const U = 40, P = 24; game.d.off = game.d.off ?? 2;
+        const upd = () => {
+          $('#straw').style.left = (P+game.d.off*U)+'px';
+          const al = game.d.off===0, tip = $('#alignTip');
+          tip.innerHTML = al ? `✅ ${R('對齊')} 0 了！看看右端在哪裡` : `👉 左端還沒${R('對齊')} 0`;
+          tip.className = 'text-xl font-black px-3 py-1 rounded-full ' + (al ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-600');
+        };
+        $('#mvL').onclick = () => { if(game.d.off>0){ game.d.off--; sfx('tap'); upd(); if(game.d.off===0) speak('對齊0了！'); } };
+        $('#mvR').onclick = () => { if(game.d.off<10){ game.d.off++; sfx('tap'); upd(); } };
+        game.undo = () => { if(getSlot('len')){ clearSlot('len'); } else if(game.d.off!==2){ game.d.off = 2; upd(); } else { game.step--; renderStep(); } };
+        game.check = () => {
+          if(game.d.off!==0) return wrong(`先把${R('吸管')}左端${R('對齊')}${R('刻度')} 0 再量喔！`);
+          if(getSlot('len')==='5') correct(`黃${R('吸管')}長 5 ${R('公分')}，太短了！`);
+          else { wrong('從 0 開始數，一大格是 1 公分，數數看有幾格？'); clearSlot('len'); }
+        };
+        upd();
+      }
+    },
+    { part:'Part 2 吸管拼接', who:'yu', anger:true, angerStart:45,
+      say:()=>`吸管太短，我喝不到啦！吸管接起來要比 27 ${R('公分')}長才行，快幫我想辦法！`,
+      body:()=>`<div class="text-2xl font-black text-center mb-3">🧰 ${R('備料區')}的${R('吸管')}</div>
+        <div class="flex flex-col items-start gap-3 w-fit mx-auto text-xl font-black">
+          ${[[STRAW.Y,'（剛剛量好的）'],[STRAW.R,''],[STRAW.G,''],[STRAW.Bl,'']].map(([s,t])=>`<div class="flex items-center gap-3">
+            <div style="width:${s.cm*22}px;height:24px;border-radius:12px;background:${s.c};box-shadow:0 3px 0 #0002"></div>${s.n} ${s.cm} ${R('公分')} ${t}</div>`).join('')}
+        </div>
+        <div class="myth mt-4">🎯 任務：黃色 5 ${R('公分')}再接兩根，總長要 <span class="text-red-500 text-3xl">＞ 27</span> ${R('公分')}！<br>小心客人的${R('怒氣值')}會上升喔！</div>
+        <div class="flex justify-center mt-4"><button id="goAtt" class="btn-go">開始拼接 ▶</button></div>`,
+      bind(){ $('#goAtt').onclick = () => correct('先看老師示範組合一！', {noStar:true, delay:1300}); }
+    },
+    attempt({ demo:true, segs:[STRAW.Y,STRAW.R,STRAW.G], prev:45, anger:70, badge:'👩‍🏫 老師示範', title:'嘗試 1・組合一',
+      say:`快一點！先試試黃色 5 ${R('公分')}、紅色 7 ${R('公分')}、綠色 9 ${R('公分')}接起來！`,
+      angry:'吸管還是沉下去了！我好生氣！😠' }),
+    attempt({ segs:[STRAW.Y,STRAW.R,STRAW.Bl], prev:70, anger:95, badge:'🙋 學生自主操作', title:'嘗試 2・組合二',
+      say:`換你們試試！黃色 5 ${R('公分')}、紅色 7 ${R('公分')}、藍色 14 ${R('公分')}，這次夠長了嗎？`,
+      angry:'又沉下去了！只差一點點…我快氣炸了！😡' }),
+    attempt({ segs:[STRAW.Y,STRAW.G,STRAW.Bl], prev:95, badge:'🙋 學生自主操作', title:'嘗試 3・組合三',
+      say:`再換一組！黃色 5 ${R('公分')}、綠色 9 ${R('公分')}、藍色 14 ${R('公分')}，拜託這次要成功！`, angry:'' }),
+    { part:'Part 2 吸管對比展示牆', who:'yu', anger:true,
+      say:()=>`三種吸管組合比一比，到底差在哪裡呢？`,
+      body:()=>{
+        const U = 16, rows = [
+          ['組合一（老師示範）：',[STRAW.Y,STRAW.R,STRAW.G],21],
+          ['組合二（學生操作）：',[STRAW.Y,STRAW.R,STRAW.Bl],26],
+          ['組合三（學生操作）：',[STRAW.Y,STRAW.G,STRAW.Bl],28]];
+        const line = 230 + 12 + 27*U;
+        return `<div class="text-2xl font-black text-center mb-1">🖼️ 三種${R('吸管')}拼接對比牆</div>
+          <div class="overflow-x-auto"><div class="cwall w-max mx-auto">
+            <div class="absolute top-0 bottom-0 border-l-4 border-dashed border-red-500 z-10 pointer-events-none" style="left:${line-2}px">
+              <span class="absolute top-0 left-1 text-red-500 font-black whitespace-nowrap">27 公分</span></div>
+            ${rows.map(([n,segs,t])=>`
+              <div class="cl">${n}</div>
+              <div><div class="cbar" style="width:${t*U}px">${segs.map(x=>`<div style="width:${x.cm*U}px;background:${x.c}">${x.cm}</div>`).join('')}</div></div>
+              <div class="cn ${t>27?'text-green-600':'text-red-500'}">${t} 公分</div>
+              <div class="cs ${t>27?'text-green-600':'text-red-500'}">${t>27?'＞':'＜'}</div>
+              <div class="cs">27</div>
+              <div class="cr ${t>27?'text-green-600':'text-red-500'}">${t>27?'✅ 成功':'❌ 太短'}</div>`).join('')}
+          </div></div>
+          <div class="text-base font-bold text-center mt-1">黃色 5 ${R('公分')}・紅色 7 ${R('公分')}・綠色 9 ${R('公分')}・藍色 14 ${R('公分')}</div>
+          <div id="sum2" class="myth mt-3 hidden">🏆 總結：只有組合三（5 ＋ 9 ＋ 14 ＝ 28 ${R('公分')}）大於 27 ${R('公分')}，${R('吸管')}才會露出杯口！</div>
+          <div class="flex justify-center mt-3"><button id="sumBtn" class="btn-go">💡 看總結</button></div>`;
+      },
+      bind(){
+        $('#sumBtn').onclick = () => {
+          show($('#sum2')); hide($('#sumBtn')); setAnger(0); W.cheer();
+          $('#sayBox').innerHTML = '只有組合三最長！珍奶好好喝，謝謝你們，我很滿意！😄';
+          correct('只有組合三大於 27 公分！小宇滿意地喝著珍奶～', {delay:3200, then:()=>completeLevel(2)});
+        };
+      }
+    }
+  ],
+
+
+  /* ======================= 關卡三（第三位客人：阿姨） ======================= */
+  3: [
+    { part:'Part 1 情境與預測', who:'aunt',
+      say:()=>`我帶了一個${R('高瘦瓶')}和一個${R('矮胖瓶')}，想裝${R('彩虹奶昔')}。哪一瓶裝得比較多呢？`,
+      body:()=>`<div class="flex justify-center items-end gap-14 my-3">
+          <div class="text-center">${bottleHTML('T',7,'tall')}<div class="text-2xl font-black mt-2">${R('高瘦瓶')}</div></div>
+          <div class="text-center">${bottleHTML('F',8,'fat')}<div class="text-2xl font-black mt-2">${R('矮胖瓶')}</div></div></div>
+        <div class="tip text-center">💡 提示：${R('備料區')}有很多一樣大的${R('小杯子')}喔！</div>
+        <div class="flex justify-center mt-4"><button id="goPred" class="btn-go">📊 先來${R('預測')}</button></div>`,
+      bind(){ $('#goPred').onclick = () => correct('先猜猜看，大家覺得哪一瓶比較大？', {noStar:true, delay:1400}); }
+    },
+    { part:'Part 1 情境與預測', who:'aunt',
+      say:()=>`全班來${R('預測')}！支持哪一瓶的人比較多？`,
+      body:()=>withPad(`<div class="text-xl font-black mb-2">📊 ${R('預測')}人數${R('長條圖')}：輸入人數，長條就會長出來！</div>
+        <div class="overflow-x-auto"><div class="predgrid">
+          <div class="ph text-center">瓶子</div><div class="ph">支持哪一瓶</div><div class="ph">人數</div><div class="ph">${R('長條圖')}</div>
+          ${[['T','p1','高瘦瓶','linear-gradient(90deg,#ef4444,#facc15,#a855f7)'],['F','p2','矮胖瓶','linear-gradient(90deg,#22c55e,#3b82f6,#4f46e5)']].map(([k,id,nm,g],i)=>`
+            <div class="pc ic">${bottleIcon(k,70)}</div>
+            <div class="pc text-2xl font-black whitespace-nowrap">支持${R(nm)}</div>
+            <div class="pc">${SL(id,{len:2,w:1})}<span class="text-2xl font-black ml-2">人</span></div>
+            <div class="pc"><div class="ptrack"><div class="pbar" id="bar${i+1}" style="background:${g}"></div><b class="pval" id="bv${i+1}">0 人</b></div></div>`).join('')}
+        </div></div>${okBtn('確認預測 ✔')}`),
+      bind(){
+        game.onPad = () => {
+          const v1 = +getSlot('p1')||0, v2 = +getSlot('p2')||0, mx = Math.max(10,v1,v2);
+          $('#bar1').style.width = (v1/mx*100)+'%'; $('#bar2').style.width = (v2/mx*100)+'%';
+          $('#bv1').textContent = v1+' 人'; $('#bv2').textContent = v2+' 人';
+        };
+        game.check = () => {
+          const v1 = getSlot('p1'), v2 = getSlot('p2');
+          if(!v1 || !v2) return wrong('兩個人數都要填喔！');
+          game.d.pred = [+v1, +v2];
+          $('#sayBox').innerHTML = `用感覺猜不準，請拿出${R('實證')}證明！`;
+          correct(`阿姨：「用感覺猜不準，請拿出${R('實證')}證明！」`, {noStar:true, delay:2600});
+        };
+      }
+    },
+    { part:'Part 2 雙軌彩虹倒水實證', who:'aunt',
+      say:()=>`請你把瓶子裡的${R('彩虹奶昔')}倒進一樣大的${R('小杯子')}，看看各能倒滿幾杯！`,
+      body:()=>{
+        const sec = (k,name,n,cls) => `<div class="bg-sky-50 rounded-2xl p-3 border-4 border-sky-100 mb-3">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+            <div class="text-2xl font-black flex items-center gap-2">${bottleIcon(k,42)} ${name}</div>
+            <button class="btn-go !text-xl !py-2" id="pb${k}">🥛 按下倒水</button></div>
+          <div class="text-base font-bold text-sky-700 mb-2">✋ 也可以按住瓶子，拖到發亮的${R('小杯子')}附近，瓶子會自動吸過去倒水！</div>
+          <div class="flex items-end gap-5">
+            <div class="text-center w-[170px] shrink-0"><div class="dragb inline-block" id="drag${k}">${bottleHTML(k,n,cls)}</div>
+              <div><span class="grab-tip" id="gt${k}">還有 ${n} 層</span></div></div>
+            <div class="flex flex-wrap gap-x-2 gap-y-3 items-end" id="row${k}">${Array.from({length:8},(_,i)=>`<div class="cupcell"><div class="sc"><div class="fill"></div></div><div class="cupno">第 ${i+1} 杯</div></div>`).join('')}</div>
+          </div></div>`;
+        return withPad(`${sec('T',R('高瘦瓶'),7,'tall')}${sec('F',R('矮胖瓶'),8,'fat')}
+          <div id="countQ" class="hidden">
+            <div id="tip" class="tip mb-2"></div>
+            <div class="flex flex-wrap items-center justify-center gap-4">
+              <div class="eqline">${bottleIcon('T',48)} ${R('高瘦瓶')}倒滿 ${SL('c1',{lock:1})} 杯</div>
+              <div class="eqline">${bottleIcon('F',48)} ${R('矮胖瓶')}倒滿 ${SL('c2',{lock:1})} 杯</div></div>
+            ${okBtn()}</div>`);
+      },
+      bind(){
+        W.bottleReset();
+        const cnt = {T:0,F:0}, N = {T:7,F:8}, rid = game.rid, S = {};
+        let counted = false;
+        ['T','F'].forEach(k=>S[k] = {tx:0,ty:0,pouring:false,drag:false,auto:false,sx:0,sy:0,lx:0,ly:0});
+        const el = k => $('#drag'+k);
+        const cellOf = k => $('#row'+k).children[cnt[k]];
+        const apply = (k,t) => { const e = el(k); e.style.transition = t || 'none'; e.style.transform = `translate(${S[k].tx}px,${S[k].ty}px)`; };
+        const goHome = k => { S[k].tx = 0; S[k].ty = 0; el(k).classList.remove('dragging'); apply(k,'transform .5s cubic-bezier(.3,1.4,.5,1)'); };
+        const mouth = k => { const r = $('#bw'+k+' .neck').getBoundingClientRect(); return { x:r.left+6, y:r.top+r.height*.5 }; };
+        const markTargets = () => ['T','F'].forEach(k=>{
+          [...$('#row'+k).children].forEach((c,i)=>c.querySelector('.sc').classList.toggle('target', i===cnt[k] && cnt[k]<N[k]));
+        });
+        const finishCheck = () => {
+          if(counted || cnt.T<N.T || cnt.F<N.F) return; counted = true;
+          show($('#countQ')); $('#countQ').scrollIntoView({behavior:'smooth', block:'center'});
+          runGuide([
+            { slot:'c1', ans:'7', tip:`看杯子下面的數字：${R('高瘦瓶')}倒到第幾杯？一共倒滿幾杯？`, hint:'看高瘦瓶那一排，最後一個有顏色的是第幾杯？' },
+            { slot:'c2', ans:'8', tip:`${R('矮胖瓶')}倒到第幾杯？一共倒滿幾杯？`, hint:'看矮胖瓶那一排，最後一個有顏色的是第幾杯？' }
+          ], ()=>correct(`${R('實證')}完成：${R('高瘦瓶')} 7 杯、${R('矮胖瓶')} 8 杯！`));
+        };
+        async function doPour(k){
+          const s = S[k]; if(s.pouring || cnt[k]>=N[k]) return; s.pouring = true;
+          const e = el(k), cell = cellOf(k), cup = cell.querySelector('.sc');
+          let c = cup.getBoundingClientRect();
+          // 磁吸：先把瓶子定位到杯子上方
+          s.tx += (c.left+c.width/2+30) - (e.getBoundingClientRect().left+e.getBoundingClientRect().width/2);
+          s.ty += (c.top-40) - e.getBoundingClientRect().bottom; apply(k,'transform .25s ease-out');
+          await wait(260); if(rid!==game.rid) return;
+          e.classList.add('pouring'); sfx('tap');
+          await wait(330); if(rid!==game.rid) return;
+          c = cup.getBoundingClientRect(); let m = mouth(k);
+          s.tx += (c.left+c.width/2) - m.x; s.ty += (c.top-60) - m.y; apply(k,'transform .2s ease-out');
+          await wait(220); if(rid!==game.rid) return;
+          m = mouth(k); c = cup.getBoundingClientRect();
+          const layer = $(`#bt${k} .layer:not(.gone)`), color = layer.style.background;
+          const st = document.createElement('div'); st.className = 'stream';
+          st.style.background = `linear-gradient(90deg, ${color} 0%, rgba(255,255,255,.75) 45%, ${color} 70%)`;
+          st.style.left = (c.left+c.width/2-5)+'px'; st.style.top = m.y+'px'; st.style.height = '0px'; document.body.appendChild(st);
+          sfx('drip');
+          requestAnimationFrame(()=>{ st.style.transition = 'height .28s ease-in'; st.style.height = Math.max(20, c.bottom-6-m.y)+'px'; });
+          setTimeout(()=>{ layer.classList.add('gone'); cup.querySelector('.fill').style.background = `linear-gradient(${color}, ${color})`; cup.classList.add('full'); }, 260);
+          await wait(820);
+          st.style.transition = 'top .25s ease-in, height .25s ease-in'; st.style.top = (c.bottom-8)+'px'; st.style.height = '0px';
+          await wait(260); st.remove();
+          e.classList.remove('pouring'); s.pouring = false;
+          if(rid!==game.rid) return;
+          cnt[k]++; W.pour(k); cell.classList.add('got'); sfx('key'); markTargets();
+          speak(`第${cnt[k]}杯`, true);
+          $('#gt'+k).textContent = cnt[k]>=N[k] ? '✔ 倒完了' : `還有 ${N[k]-cnt[k]} 層`;
+          if(cnt[k]>=N[k]){ e.style.opacity = .55; const b = $('#pb'+k); b.disabled = true; b.textContent = '✔ 倒完了'; }
+          s.sx = s.lx - s.tx; s.sy = s.ly - s.ty;
+          if(!s.drag && !s.auto) goHome(k);
+          finishCheck();
+        }
+        ['T','F'].forEach(k=>{
+          const e = el(k), s = S[k];
+          $('#pb'+k).onclick = async () => {
+            if(s.pouring || s.drag || s.auto || cnt[k]>=N[k] || game.busy) return;
+            s.auto = true; e.classList.add('dragging'); sfx('tap');
+            const c = cellOf(k).querySelector('.sc').getBoundingClientRect(), b = e.getBoundingClientRect();
+            s.tx += (c.left+c.width/2+30) - (b.left+b.width/2); s.ty += (c.top-40) - b.bottom; apply(k,'transform .55s ease-in-out');
+            await wait(580); if(rid!==game.rid) return;
+            await doPour(k); if(rid!==game.rid) return;
+            s.auto = false; goHome(k);
+          };
+          e.onpointerdown = ev => {
+            if(cnt[k]>=N[k] || s.pouring || s.auto || game.busy) return; ev.preventDefault();
+            s.drag = true; e.setPointerCapture(ev.pointerId);
+            s.sx = ev.clientX - s.tx; s.sy = ev.clientY - s.ty; s.lx = ev.clientX; s.ly = ev.clientY;
+            e.classList.add('dragging'); sfx('tap');
+          };
+          e.onpointermove = ev => {
+            if(!s.drag) return; s.lx = ev.clientX; s.ly = ev.clientY;
+            if(s.pouring || cnt[k]>=N[k]) return;
+            s.tx = ev.clientX - s.sx; s.ty = ev.clientY - s.sy; apply(k);
+            const c = cellOf(k).querySelector('.sc').getBoundingClientRect(), b = e.getBoundingClientRect();
+            const dx = Math.abs((b.left+b.width/2)-(c.left+c.width/2));
+            if(dx<130 && b.bottom<c.top+30 && b.bottom>c.top-260) doPour(k);   // 放寬磁吸範圍
+          };
+          const end = () => { if(!s.drag) return; s.drag = false; if(!s.pouring) goHome(k); };
+          e.onpointerup = end; e.onpointercancel = end;
+        });
+        game.undo = () => { if(cnt.T+cnt.F>0){ renderStep(); toast('↩️','瓶子重新裝滿，再倒一次！','info'); toastTimer = setTimeout(hideToast,1200); } else { game.step--; renderStep(); } };
+        markTargets();
+      }
+    },
+    { part:'Part 3 破除迷思', who:'aunt',
+      say:()=>`${R('高瘦瓶')}倒了 7 杯，${R('矮胖瓶')}倒了 8 杯，哪一瓶裝得比較多？`,
+      body:()=>`<div class="q text-center flex items-center justify-center gap-2 flex-wrap">${bottleIcon('T',50)} ${R('高瘦瓶')} 7 杯 ○ ${bottleIcon('F',50)} ${R('矮胖瓶')} 8 杯</div>
+        <div class="flex items-center justify-center gap-4 text-6xl font-black my-3"><span>7</span><span id="cmpSlot" class="cslot">?</span><span>8</span></div>
+        <div id="st1" class="flex justify-center gap-4">${['>','<','='].map(s=>`<button class="btn-ch" data-s="${s}">${s}</button>`).join('')}</div>
+        <div id="st2" class="hidden text-center mt-4"><div class="q mb-3">所以，哪一瓶${R('容量')}比較大？</div>
+          <div class="flex justify-center gap-4"><button class="btn-card flex items-center gap-2" data-b="T">${bottleIcon('T',48)} ${R('高瘦瓶')}</button>
+            <button class="btn-card flex items-center gap-2" data-b="F">${bottleIcon('F',48)} ${R('矮胖瓶')}</button></div></div>
+        <div id="myth" class="hidden myth mt-4">❌ 高的瓶子一定比較大？<br>✅ 不一定！${R('矮胖瓶')}雖然矮，卻裝得比較多。要用${R('實證')}比一比才知道！</div>`,
+      bind(){
+        $$('[data-s]').forEach(b=>b.onclick=()=>{
+          if(game.busy) return;
+          if(b.dataset.s==='<'){ $('#cmpSlot').textContent = '＜'; hide($('#st1')); praise('7 ＜ 8！', true); show($('#st2'));
+            game.undo = () => renderStep(); }
+          else wrong('7 杯和 8 杯，哪個數比較大？');
+        });
+        $$('[data-b]').forEach(b=>b.onclick=()=>{
+          if(game.busy) return;
+          if(b.dataset.b==='F'){
+            show($('#myth')); hide($('#st2'));
+            const p = game.d.pred || [0,0];
+            $('#sayBox').innerHTML = `太棒了！我就用${R('矮胖瓶')}裝${R('彩虹奶昔')}！謝謝你們！😄`;
+            correct(`破解迷思！${R('矮胖瓶')}裝得比較多，彩虹奶昔出餐成功！<br><span class="text-lg">${p[1]>p[0]?'你們的預測猜對了！':'實證比感覺更準確！'}</span>`, {delay:3400, then:()=>completeLevel(3)});
+          } else wrong('高瘦瓶只倒了 7 杯，比 8 杯少喔！');
+        });
+      }
+    }
+  ]
+};
+
+/* =========================================================
+   6. 流程控制
+========================================================= */
+const LV = {
+  1:{ icon:'💰', title:'收銀台算錢', desc:'第一位客人：價目表缺空・找零驗算・硬幣湊數' },
+  2:{ icon:'📏', title:'吸管救援', desc:'第二位客人：直尺測量・吸管拼接・對比牆' },
+  3:{ icon:'🌈', title:'彩虹奶昔', desc:'第三位客人：容量預測・拖拽倒水實證' }
+};
+function renderStep(){
+  const L = LEVELS[game.level], st = L[game.step], sp = SPK[st.who];
+  game.rid++; game.check = null; game.onPad = null; game.undo = null; game.guideIdx = 0;
+  $$('.stream').forEach(s=>s.remove());
+  const cust = SPK[{1:'mei',2:'yu',3:'aunt'}[game.level]];
+  W.setCustomer(cust);
+  if(st.angerStart!==undefined) setAnger(st.angerStart);
+  if(st.anger){ show($('#anger'), true); panel.style.top = '8.3rem'; panel.style.maxHeight = 'calc(100vh - 9.1rem)'; }
+  else { hide($('#anger')); panel.style.top = ''; panel.style.maxHeight = ''; }
+  if(game.level===2 && !st.anger && game.step>0) W.setAnger(game.anger); else if(!st.anger) W.setAnger(0);
+  show(panel);
+  panel.innerHTML = `
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-2"><span class="tag">${LV[game.level].icon} ${R('關卡')}${CN[game.level]}｜${st.part}</span>
+      <div class="flex items-center gap-2"><span class="text-amber-700 font-black text-xl">${game.step+1} / ${L.length}</span>
+      <button class="undo-btn" onclick="undo()">↩️ 回到上一步</button></div></div>
+    <div class="flex items-start gap-3 mb-3"><div class="text-center shrink-0 w-[5.5rem]"><div class="text-5xl md:text-6xl leading-none">${sp.emoji}</div><div class="text-xs font-black mt-1 leading-4">${sp.name}</div></div>
+      <div id="sayBox" class="bubble">${st.say()}</div></div>
+    <div id="body">${st.body()}</div>`;
+  panel.scrollTop = 0;
+  speak(st.say(), true);
+  st.bind && st.bind();
+  game.resume = 0;
+}
+function next(){
+  const L = LEVELS[game.level];
+  if(game.step < L.length-1){ game.step++; renderStep(); }
+}
+function startLevel(n){
+  if(n>game.unlocked){ sfx('no'); toast('🔒', `先完成${R('關卡')}${CN[n-1]}才能${R('解鎖')}喔！`, 'no'); toastTimer = setTimeout(hideToast,1800); return; }
+  sfx('tap'); hide($('#map')); show($('#mapBtn'));
+  game.level = n; game.step = 0; game.d = {}; game.busy = false; game.resume = 0;
+  W.setLevel('L'+n); W.setCoins([]); setAnger(0);
+  if(n===3) W.bottleReset();
+  toast(LV[n].icon, `${R('關卡')}${CN[n]}：${LV[n].title}`, 'info'); toastTimer = setTimeout(hideToast, 1500);
+  renderStep();
+}
+function completeLevel(n){
+  game.done[n] = true; game.justUnlocked = n<3 && game.unlocked<n+1 ? n+1 : null; game.unlocked = Math.max(game.unlocked, n+1);
+  game.rid++; game.level = 0;
+  hide(panel); hide($('#anger')); hide($('#mapBtn'));
+  sfx('win'); W.cheer(); W.celebrate(90); confettiDOM(80);
+  $('#clearTitle').innerHTML = `${R('關卡')}${CN[n]}${R('完勝')}！`;
+  $('#clearText').innerHTML = n<3 ? `🔓 ${R('解鎖')}${R('關卡')}${CN[n+1]}：${LV[n+1].title}！` : `🎊 三個${R('關卡')}全部${R('完勝')}！<br>${R('老闆')}有話要跟你們說…`;
+  $('#clearBtn').innerHTML = n<3 ? `🗺️ 回到${R('關卡')}${R('地圖')}` : `🧔 去見${R('老闆')}`;
+  $('#clearBtn').onclick = () => { sfx('tap'); hide($('#clear')); n<3 ? showMap() : bossScene(); };
+  show($('#clear'), true); speak(plain($('#clearTitle').innerHTML)+'。'+plain($('#clearText').innerHTML), true);
+}
+function showMap(){
+  game.rid++; game.level = 0;
+  hide(panel); hide($('#anger')); hide($('#mapBtn'));
+  W.setLevel('map'); W.setCustomer(SPK.boss); W.setAnger(0);
+  $('#mapTitle').innerHTML = `🗺️ ${R('關卡')}${R('地圖')}`;
+  $('#mapSub').innerHTML = `${game.name}，完成一關就能${R('解鎖')}下一關！`;
+  $('#mapCards').innerHTML = [1,2,3].map(n=>{
+    const lock = n>game.unlocked, done = game.done[n];
+    return `${n>1?'<div class="text-5xl font-black text-amber-500 hidden md:block">➜</div>':''}
+      <button class="lvcard ${lock?'lock':''} ${done?'done':''} ${game.justUnlocked===n?'newly':''}" data-lv="${n}">
+        <div class="text-6xl">${lock?'🔒':LV[n].icon}</div>
+        <div class="text-3xl font-black mt-2 leading-[3.2rem]">${R('關卡')}${CN[n]}</div>
+        <div class="text-2xl font-black text-amber-700">${LV[n].title}</div>
+        <div class="text-base font-bold mt-1">${LV[n].desc}</div>
+        <div class="mt-3 inline-block rounded-full px-4 py-1 font-black text-lg ${done?'bg-green-400 text-white':lock?'bg-gray-300':'bg-amber-400 text-white'}">
+          ${done?'✅ 已完勝・再玩':lock?'未解鎖':'▶ 開始'}</div>
+      </button>`;
+  }).join('');
+  $$('[data-lv]').forEach(b=>b.onclick=()=>startLevel(+b.dataset.lv));
+  if(game.justUnlocked){ sfx('unlock'); speak(`關卡${CN[game.justUnlocked]}解鎖了！`, true); }
+  game.justUnlocked = null;
+  show($('#map'), true);
+}
+function showDialog(lines, done){
+  let i = 0; const box = $('#dlg');
+  const render = () => {
+    const l = lines[i], s = SPK[l.who];
+    $('#dlgAva').textContent = s.emoji; $('#dlgName').textContent = s.name; $('#dlgText').innerHTML = l.text;
+    if(s.shirt!==undefined) W.setCustomer(s);
+    W.cheer(); speak(l.text, true);
+    $('#dlgNext').innerHTML = i<lines.length-1 ? '繼續 ▶' : (l.btn || '好！▶');
+  };
+  $('#dlgNext').onclick = () => { sfx('tap'); i++; if(i<lines.length) render(); else { hide(box); done && done(); } };
+  show(box); render();
+}
+ZY['保護'] = 'ㄅㄠˇ ㄏㄨˋ';
+function bossScene(){
+  W.setLevel('boss'); W.setCustomer(SPK.boss);
+  showDialog([
+    { who:'boss', text:`太厲害了！謝謝兩位小${R('店員')}，用${R('數學')}解決難題還幫忙減少${R('塑膠')}垃圾！` },
+    { who:'boss', text:`${game.name}，最後我們一起許下 SDGs 14 ${R('減塑')}${R('承諾')}，${R('保護')}${R('海洋')}裡的小動物吧！`, btn:'我願意！▶' }
+  ], showPromise);
+}
+function showPromise(){
+  $('#promiseTitle').innerHTML = `🐢 ${R('減塑')}${R('承諾')}書`;
+  $('#promiseSub').innerHTML = `勾選你願意做到的事（至少一項）`;
+  const items = [
+    `🥤 買飲料時${R('自備')}${R('環保杯')}`,
+    `🥢 ${R('自備')}${R('環保吸管')}，不拿塑膠吸管`,
+    `🚫 減少使用${R('一次性')}${R('塑膠')}（塑膠袋、杯蓋）`
+  ];
+  $('#pList').innerHTML = items.map(t=>`<div class="pcard"><div class="box">✓</div><div>${t}</div></div>`).join('');
+  $$('.pcard').forEach(c=>c.onclick=()=>{ c.classList.toggle('on'); sfx('tap'); });
+  $('#pBtn').innerHTML = `✍️ 我${R('承諾')}！${R('送出')}`;
+  $('#pBtn').onclick = () => {
+    const on = $$('.pcard.on');
+    if(!on.length){ sfx('no'); toast('🤔','至少勾選一項承諾喔！','no'); speak('至少勾選一項承諾喔！', true); toastTimer = setTimeout(hideToast, 2000); return; }
+    game.promises = on.map(c=>c.querySelector('div:last-child').innerHTML);
+    sfx('ok'); hide($('#promise'));
+    showDialog([{ who:'boss', text:`我宣布：${game.name}，獲得${R('老闆')}親自頒發的「${R('永續')}${R('小')}${R('店長')}${R('大師')}${R('勳章')}」！`, btn:'領取勳章 🏅' }], award);
+  };
+  show($('#promise'), true); speak('勾選你願意做到的減塑承諾！', true);
+}
+function award(){
+  $('#awardTitle').innerHTML = `${R('恭喜')}${R('完勝')}！`;
+  $('#awardName').innerHTML = `🏅 ${R('永續')}${R('小')}${R('店長')}${R('大師')}${R('勳章')}`;
+  $('#awardTo').innerHTML = `頒給：${game.name}（大家一起來顧店）`;
+  $('#awardStars').textContent = game.stars;
+  $('#awardList').innerHTML = game.promises.map(p=>`<li>✅ ${p}</li>`).join('');
+  $('#againBtn').innerHTML = `🔁 ${R('再玩一次')}`;
+  $('#againBtn').onclick = () => location.reload();
+  show($('#award'), true);
+  cheerSound(); W.celebrate(320); W.cheer(); confettiDOM(200);
+  setTimeout(()=>confettiDOM(160), 1500); setTimeout(()=>{ confettiDOM(160); W.celebrate(200); cheerSound(); }, 3000);
+  speak(`恭喜${game.name}！獲得永續小店長大師勳章！`, true);
+}
+
+/* =========================================================
+   7. 開場：街道 → 進店 → 登入 → 地圖
+========================================================= */
+function fadeTo(cb){ const f = $('#fade'); f.style.opacity = 1; setTimeout(()=>{ cb(); f.style.opacity = 0; }, 550); }
+let entered = false;
+function enterShop(){
+  if(entered) return; entered = true; sfx('win');
+  fadeTo(()=>{ hide($('#streetUI')); W.toShop(); W.setLevel('map'); W.setCustomer(SPK.boss); document.body.style.background = '#ffeedd'; show($('#login'), true); speak('請選擇角色，並輸入你的名字！', true); });
+}
+function initUI(){
+  $('#hudTitle').innerHTML = `🧋 ${R('永續')}${R('飲料店')}`;
+  $('#streetTitle').innerHTML = `🧋 永續飲料店<br class="md:hidden"> 數學小店員`;
+  $('#walkTip').textContent = '👫 兩位小店員正走去飲料店上班…';
+  $('#enterBtn').textContent = '👆 點擊進店';
+  $('#loginTitle').textContent = '選擇角色';
+  $('#roleName').textContent = '【大家一起來顧店】';
+  $('#nameLabel').textContent = '✏️ 輸入你的名字';
+  $('#loginBtn').textContent = '確定 ✔';
+  $('#angerLabel').innerHTML = `第二位客人的${R('怒氣值')}`;
+  const zyLabel = () => $('#zyBtn').innerHTML = `${document.body.classList.contains('no-zy')?'⬜':'🔤'} 注音`;
+  zyLabel();
+  $('#zyBtn').onclick = () => { document.body.classList.toggle('no-zy'); zyLabel(); sfx('tap'); };
+  $('#sndBtn').onclick = () => { soundOn = !soundOn; $('#sndBtn').textContent = soundOn ? '🔊' : '🔈'; sfx('tap'); };
+  $('#voiceBtn').onclick = () => { voiceOn = !voiceOn; $('#voiceBtn').textContent = voiceOn ? '🗣️ 語音' : '🤐 靜音'; if(!voiceOn && 'speechSynthesis' in window) speechSynthesis.cancel(); sfx('tap'); };
+  $('#mapBtn').onclick = () => { sfx('tap'); game.busy = false; showMap(); };
+
+  W.startWalk(()=>{
+    hide($('#skipBtn')); show($('#enterBtn'));
+    $('#walkTip').textContent = '🎉 到了！點擊飲料店或按鈕進店';
+    sfx('unlock');
+  });
+  W.onShop(enterShop);
+  $('#skipBtn').onclick = () => { sfx('tap'); W.skipWalk(); };
+  $('#enterBtn').onclick = enterShop;
+
+  let roleSel = false;
+  $('#roleCard').onclick = () => { roleSel = !roleSel; $('#roleCard').classList.toggle('sel', roleSel); sfx('tap'); if(roleSel) speak('大家一起來顧店！', true); };
+  $('#loginBtn').onclick = () => {
+    const nm = $('#nameIn').value.trim();
+    if(!roleSel){ sfx('no'); $('#roleCard').classList.add('shake'); setTimeout(()=>$('#roleCard').classList.remove('shake'),400); speak('請先點選角色！', true); return; }
+    if(!nm){ sfx('no'); $('#nameIn').focus(); $('#nameIn').classList.add('shake'); setTimeout(()=>$('#nameIn').classList.remove('shake'),400); speak('請輸入你的名字！', true); return; }
+    game.name = nm.replace(/[<>&"]/g,''); SPK.me.name = game.name; sfx('ok');
+    hide($('#login')); show($('#hud'), true);
+    $('#hudName').textContent = `👦👧 ${game.name}`; show($('#hudName'));
+    showDialog([
+      { who:'boss', text:`歡迎光臨${R('永續')}${R('飲料店')}！${game.name}，今天你們兩位就是本店的小${R('店員')}！` },
+      { who:'boss', text:`今天會有三位客人上門，他們會遇到各種${R('數學')}難題，要靠你們幫忙解決。我們店還有一個目標：一起減少${R('塑膠')}垃圾！` },
+      { who:'boss', text:`先從${R('關卡')}一開始吧！完勝一關，就能${R('解鎖')}下一關，加油！`, btn:`打開${R('關卡')}${R('地圖')} 🗺️` }
+    ], showMap);
+  };
+  $('#nameIn').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#loginBtn').click(); });
+
+  panel.addEventListener('click', e=>{
+    const s = e.target.closest('.sl'); if(s) activate(s);
+    const k = e.target.closest('[data-k]'); if(k) padPress(k.dataset.k);
+  });
+  document.addEventListener('keydown', e=>{
+    if(e.target.tagName==='INPUT') return;
+    if(!$('#dlg').classList.contains('hidden') && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); $('#dlgNext').click(); return; }
+    if(panel.classList.contains('hidden')) return;
+    if(/^[0-9]$/.test(e.key)) padPress(e.key);
+    else if(e.key==='Backspace'){ e.preventDefault(); padPress('del'); }
+    else if(e.key==='Enter'){ e.preventDefault(); submit(); }
+  });
+}
+initUI();
+</script>
+</body>
+</html>
